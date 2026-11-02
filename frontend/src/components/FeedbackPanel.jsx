@@ -1,5 +1,7 @@
-import { useEffect, useRef, useState } from 'react';
-import { Gauge, Target, Zap, AlertTriangle, TrendingUp, Shield } from 'lucide-react';
+import { createElement, useEffect, useRef, useState } from 'react';
+import { AlertTriangle, Gauge, MessageSquareText, Shield, Target, TrendingUp, Zap } from 'lucide-react';
+import { ProgressBar, ScoreRing } from './ui';
+import { cx, scoreTone } from '../utils/format';
 import useSessionStore from '../stores/useSessionStore';
 
 export default function FeedbackPanel() {
@@ -118,32 +120,26 @@ export default function FeedbackPanel() {
       case 'DOWN': return 'Ready';
       case 'UP': return 'Contracted';
       case 'READY': return 'Tracking';
-      case 'CURLING': return 'Curling Up';
+      case 'CURLING': return 'Curling up';
       case 'PEAK': return 'Peak';
       case 'EXTENDING': return 'Extending';
-      default: return 'Ready';
+      default: return sessionActive ? 'Tracking' : 'Waiting to start';
     }
-  };
-
-  const getScoreColor = (score) => {
-    if (score >= 80) return 'text-success';
-    if (score >= 60) return 'text-warning';
-    return 'text-danger';
   };
 
   const getEngagementLabel = (status) => {
     switch (status) {
-      case 'good': return { text: 'Strong', badgeClass: 'badge-success' };
+      case 'good': return { text: 'Strong', badgeClass: 'badge-good' };
       case 'low':
       case 'low_engagement':
-        return { text: 'Low', badgeClass: 'badge-warning' };
+        return { text: 'Low', badgeClass: 'badge-warn' };
       case 'risk':
       case 'injury_risk':
-        return { text: 'Risk', badgeClass: 'badge-danger' };
-      case 'weak_peak': return { text: 'Weak Peak', badgeClass: 'badge-warning' };
-      case 'sensor_live': return { text: 'Connected', badgeClass: 'badge-blue' };
-      case 'no_sensor': return { text: 'Not Ready', badgeClass: 'badge-blue' };
-      default: return { text: 'Normal', badgeClass: 'badge-blue' };
+        return { text: 'Risk', badgeClass: 'badge-bad' };
+      case 'weak_peak': return { text: 'Weak peak', badgeClass: 'badge-warn' };
+      case 'sensor_live': return { text: 'Sensor live', badgeClass: 'badge-info' };
+      case 'no_sensor': return { text: 'No sensor', badgeClass: 'badge-neutral' };
+      default: return { text: 'Normal', badgeClass: 'badge-neutral' };
     }
   };
 
@@ -152,92 +148,111 @@ export default function FeedbackPanel() {
   const postureUpdating = displayedPosture !== postureScore;
   const pressureUpdating = displayedPressure !== averageFsr;
   const formUpdating = displayedForm !== engagementStatus;
+  const anglePct = Math.max(0, Math.min(100, ((Number(angle) || 0) / 180) * 100));
 
   return (
-    <div className="feedback-panel">
-      <div className="card feedback-hero">
-        <p className="feedback-label">Reps</p>
-        <p className={`feedback-count tabular-nums metric-value ${repsUpdating ? 'metric-updating' : ''}`}>
-          {displayedReps}
-        </p>
-        <p className="feedback-state text-accent">{getRepStateLabel()}</p>
-      </div>
-
-      <div className="feedback-grid">
-        <div className="card feedback-card">
-          <div className="feedback-row">
-            <Gauge className="icon-sm text-accent" />
-            <span className="feedback-card-label">Angle</span>
-          </div>
-          <p className="feedback-value tabular-nums">{angle}°</p>
-        </div>
-
-        <div className="card feedback-card">
-          <div className="feedback-row">
-            <Target className="icon-sm text-accent" />
-            <span className="feedback-card-label">Posture</span>
-          </div>
-          <p
-            className={`feedback-value tabular-nums metric-value ${getScoreColor(displayedPosture)} ${postureUpdating ? 'metric-updating' : ''}`}
-          >
-            {displayedPosture}
+    <div className="flex flex-col gap-3">
+      {/* Rep counter + posture */}
+      <div className="card flex items-center gap-5 p-5">
+        <div className="flex-1">
+          <p className="text-[13px] text-fg-2">Reps</p>
+          <p className={cx('num mt-1 text-6xl leading-none font-medium transition-opacity', repsUpdating && 'opacity-60')}>
+            {displayedReps}
+          </p>
+          <p className="mt-3 inline-flex items-center gap-1.5 text-xs font-medium text-lime">
+            <span className={cx('size-1.5 rounded-full bg-lime', sessionActive && 'animate-pulse-dot')} />
+            {getRepStateLabel()}
           </p>
         </div>
+        <ScoreRing
+          value={displayedPosture}
+          size={104}
+          stroke={9}
+          tone={sessionActive ? scoreTone(displayedPosture) : 'lime'}
+          label="Posture"
+          className={cx('transition-opacity', postureUpdating && 'opacity-70')}
+        />
+      </div>
 
-        <div className="card feedback-card">
-          <div className="feedback-row">
-            <Shield className="icon-sm text-accent" />
-            <span className="feedback-card-label">Stability</span>
-          </div>
-          <p className={`feedback-value tabular-nums ${getScoreColor(elbowStability)}`}>{elbowStability}%</p>
+      {/* Elbow angle */}
+      <div className="card p-5">
+        <div className="flex items-center justify-between">
+          <span className="flex items-center gap-2 text-[13px] text-fg-2">
+            <Gauge className="size-4 text-muted" /> Elbow angle
+          </span>
+          <span className="num text-lg font-medium">{angle}°</span>
         </div>
-
-        <div className="card feedback-card">
-          <div className="feedback-row">
-            <TrendingUp className="icon-sm text-accent" />
-            <span className="feedback-card-label">Smooth</span>
-          </div>
-          <p className={`feedback-value tabular-nums ${getScoreColor(smoothness)}`}>{smoothness}</p>
+        <div className="relative mt-4 h-2 rounded-full bg-gradient-to-r from-lime/50 via-cyan/40 to-violet/50">
+          <span
+            className="absolute top-1/2 size-4 -translate-x-1/2 -translate-y-1/2 rounded-full border-2 border-bg bg-fg shadow transition-[left] duration-150"
+            style={{ left: `${anglePct}%` }}
+          />
+        </div>
+        <div className="num mt-2 flex justify-between text-[10px] text-muted">
+          <span>0° flexed</span>
+          <span>180° extended</span>
         </div>
       </div>
 
-      <div className="feedback-grid">
-        <div className="card feedback-card">
-          <div className="feedback-row">
-            <Zap className="icon-sm text-accent" />
-            <span className="feedback-card-label">Pressure</span>
-          </div>
-          <p className={`feedback-value tabular-nums metric-value ${pressureUpdating ? 'metric-updating' : ''}`}>
-            {Math.round(displayedPressure || 0)}
-          </p>
-        </div>
-
-        <div className="card feedback-card">
-          <div className="feedback-row">
-            <Zap className="icon-sm text-accent" />
-            <span className="feedback-card-label">Form Quality</span>
-          </div>
-          <span className={`feedback-status ${engagement.badgeClass} ${formUpdating ? 'metric-updating' : ''}`}>
+      {/* Quality metrics */}
+      <div className="grid grid-cols-2 gap-3">
+        <MetricCard icon={Shield} label="Stability" value={`${elbowStability}`} unit="%" progress={elbowStability} tone={scoreTone(elbowStability)} />
+        <MetricCard icon={TrendingUp} label="Smoothness" value={`${smoothness}`} progress={smoothness} tone={scoreTone(smoothness)} />
+        <MetricCard
+          icon={Zap}
+          label="Pressure"
+          value={`${Math.round(displayedPressure || 0)}`}
+          progress={displayedPressure || 0}
+          tone="cyan"
+          dim={pressureUpdating}
+        />
+        <div className="card flex flex-col gap-3 p-4">
+          <span className="flex items-center gap-2 text-[13px] text-fg-2">
+            <Target className="size-4 text-muted" /> Form
+          </span>
+          <span className={cx('badge self-start text-[13px] transition-opacity', engagement.badgeClass, formUpdating && 'opacity-60')}>
             {engagement.text}
           </span>
         </div>
       </div>
 
-      {delayedMessages.length > 0 && (
-        <div className="card feedback-warning">
-          <div className="feedback-row">
-            <AlertTriangle className="icon-sm text-warning" />
-            <span className="feedback-warning-label">Feedback</span>
-          </div>
-          <div className="feedback-messages">
+      {/* Coaching feedback */}
+      <div className="card p-5">
+        <p className="flex items-center gap-2 text-[13px] text-fg-2">
+          <MessageSquareText className="size-4 text-muted" /> Coaching cues
+        </p>
+        {delayedMessages.length > 0 ? (
+          <ul className="mt-3 flex flex-col gap-2" aria-live="polite">
             {delayedMessages.map((msg) => (
-              <p key={msg.id} className="text-secondary fade-up">
+              <li key={msg.id} className="flex animate-fade-up items-start gap-2.5 rounded-xl bg-amber/[0.07] px-3 py-2.5 text-sm text-fg">
+                <AlertTriangle className="mt-0.5 size-4 shrink-0 text-amber" />
                 {msg.text}
-              </p>
+              </li>
             ))}
-          </div>
-        </div>
-      )}
+          </ul>
+        ) : (
+          <p className="mt-3 text-sm text-muted">
+            {sessionActive ? 'Looking good. Cues will appear here if your form drifts.' : 'Cues appear here once the session starts.'}
+          </p>
+        )}
+      </div>
+    </div>
+  );
+}
+
+const toneClass = { lime: 'text-lime', amber: 'text-amber', rose: 'text-rose', cyan: 'text-cyan' };
+
+function MetricCard({ icon, label, value, unit, progress, tone, dim }) {
+  return (
+    <div className="card flex flex-col gap-3 p-4">
+      <span className="flex items-center gap-2 text-[13px] text-fg-2">
+        {createElement(icon, { className: 'size-4 text-muted', 'aria-hidden': true })} {label}
+      </span>
+      <p className={cx('num text-2xl leading-none font-medium transition-opacity', toneClass[tone], dim && 'opacity-60')}>
+        {value}
+        {unit ? <span className="ml-0.5 text-sm text-muted">{unit}</span> : null}
+      </p>
+      <ProgressBar value={progress} tone={tone} />
     </div>
   );
 }

@@ -1,14 +1,39 @@
-import { createElement, useState } from 'react';
-import { useLocation, Link } from 'react-router-dom';
-import { buildReportPdf, getReportPdfFileName } from '../utils/reportPdf';
+import { useState } from 'react';
+import { Link, useLocation } from 'react-router-dom';
 import {
+  AlertTriangle,
   ArrowDownToLine,
-  Trophy,
+  CheckCircle2,
+  Clock,
+  FileX2,
   Repeat,
+  Target,
+  TrendingUp,
+  Zap,
 } from 'lucide-react';
+import { buildReportPdf, getReportPdfFileName } from '../utils/reportPdf';
+import { Alert, EmptyState, IconChip, RiskBadge, ScoreRing, StatTile } from '../components/ui';
+import { cx, formatDuration, getRisk, scoreTone } from '../utils/format';
 
 const CHART_WIDTH = 760;
-const CHART_HEIGHT = 250;
+const CHART_HEIGHT = 240;
+
+function calculateInjuryRisk(postureScoreValue, averageFsrValue, repCountValue, backendScore) {
+  let totalRisk = Number.isFinite(backendScore) ? backendScore : null;
+
+  if (totalRisk === null) {
+    const postureRisk = Math.max(0, 100 - postureScoreValue);
+    const fsrRisk = averageFsrValue < 20
+      ? (20 - averageFsrValue) * 2
+      : averageFsrValue > 80
+        ? (averageFsrValue - 80) * 1.5
+        : 0;
+    const repRisk = repCountValue > 30 ? Math.min((repCountValue - 30) * 1.5, 30) : 0;
+    totalRisk = (postureRisk * 0.5) + (fsrRisk * 0.3) + (repRisk * 0.2);
+  }
+
+  return Math.max(0, Math.min(100, Math.round(totalRisk)));
+}
 
 export default function ReportPage() {
   const location = useLocation();
@@ -18,15 +43,18 @@ export default function ReportPage() {
 
   if (!report) {
     return (
-      <div className="page report-page report-empty">
-        <div className="card report-empty-card">
-          <Trophy className="icon-2xl report-empty-icon" />
-          <h2 className="report-title">No Report Found</h2>
-          <p className="text-secondary">Complete a session to generate your workout report.</p>
-          <Link to="/session" className="btn-primary button-inline">
-            Start a Session
-          </Link>
-        </div>
+      <div className="animate-fade-up pt-8">
+        <EmptyState
+          icon={FileX2}
+          title="No report to show"
+          description="Reports open right after a session ends. Past reports can be downloaded from History."
+          action={
+            <div className="flex flex-wrap justify-center gap-2">
+              <Link to="/session" className="btn btn-primary">Start a session</Link>
+              <Link to="/history" className="btn btn-ghost">Open history</Link>
+            </div>
+          }
+        />
       </div>
     );
   }
@@ -35,32 +63,6 @@ export default function ReportPage() {
   const reps = report.perRepData || [];
   const grade = insights.overallGrade || 'C';
 
-  const formatDuration = (seconds) => {
-    const m = Math.floor(seconds / 60);
-    const s = seconds % 60;
-    return m > 0 ? `${m}m ${s}s` : `${s}s`;
-  };
-
-  const calculateInjuryRisk = (postureScoreValue, averageFsrValue, repCountValue, backendScore) => {
-    let totalRisk = Number.isFinite(backendScore) ? backendScore : null;
-
-    if (totalRisk === null) {
-      const postureRisk = Math.max(0, 100 - postureScoreValue);
-      const fsrRisk = averageFsrValue < 20
-        ? (20 - averageFsrValue) * 2
-        : averageFsrValue > 80
-          ? (averageFsrValue - 80) * 1.5
-          : 0;
-      const repRisk = repCountValue > 30 ? Math.min((repCountValue - 30) * 1.5, 30) : 0;
-      totalRisk = (postureRisk * 0.5) + (fsrRisk * 0.3) + (repRisk * 0.2);
-    }
-
-    const bounded = Math.max(0, Math.min(100, Math.round(totalRisk)));
-    if (bounded < 25) return { level: 'Low', score: bounded, color: 'success' };
-    if (bounded < 55) return { level: 'Moderate', score: bounded, color: 'warning' };
-    return { level: 'High', score: bounded, color: 'danger' };
-  };
-
   const averageFsrValue = Number.isFinite(report.avgFsr)
     ? report.avgFsr
     : reps.length
@@ -68,23 +70,13 @@ export default function ReportPage() {
       : 0;
   const postureScoreValue = report.avgPostureScore ?? 0;
   const repCountValue = report.totalReps ?? 0;
-  const injuryRisk = calculateInjuryRisk(
-    postureScoreValue,
-    averageFsrValue,
-    repCountValue,
-    report.injuryRiskScore,
-  );
-  const riskBadgeClass = injuryRisk.color === 'success'
-    ? 'badge-success'
-    : injuryRisk.color === 'warning'
-      ? 'badge-warning'
-      : 'badge-danger';
+  const riskScore = calculateInjuryRisk(postureScoreValue, averageFsrValue, repCountValue, report.injuryRiskScore);
+  const risk = getRisk(riskScore);
+  const startedAt = report.startedAt ? new Date(report.startedAt) : null;
+  const goodReps = reps.filter((rep) => rep.correct).length;
 
   async function handleDownloadPdf() {
-    if (isDownloadingPdf) {
-      return;
-    }
-
+    if (isDownloadingPdf) return;
     try {
       setPdfError('');
       setIsDownloadingPdf(true);
@@ -102,260 +94,204 @@ export default function ReportPage() {
   }
 
   return (
-    <div className="page report-page">
-      <div className="container container-narrow" style={{ maxWidth: '800px', padding: '32px 24px' }}>
-        <div className={`${riskBadgeClass}`} style={{ fontSize: '0.85rem', padding: '8px 18px' }}>
-          {injuryRisk.level} Risk · {injuryRisk.score}%
-        </div>
-
-        <div style={{ marginTop: '24px', marginBottom: '32px' }}>
-          <p className="section-label">Session Report</p>
-          <h1 className="page-title" style={{ fontSize: 'clamp(1.8rem, 3vw, 2.6rem)' }}>
-            Your workout report
-          </h1>
-          <p className="text-secondary" style={{ marginTop: '8px' }}>
-            {new Date(report.startedAt).toLocaleDateString('en-US', {
-              weekday: 'long',
-              year: 'numeric',
-              month: 'long',
-              day: 'numeric',
-            })}
-          </p>
-        </div>
-
-        {pdfError ? (
-          <div className="camera-error camera-error-inline report-error">
-            <div>
-              <strong>PDF download issue</strong>
-              <p>{pdfError}</p>
-            </div>
+    <div className="animate-fade-up">
+      <header className="mb-8 flex flex-col gap-5 sm:flex-row sm:items-end sm:justify-between">
+        <div>
+          <div className="mb-3 flex flex-wrap items-center gap-2">
+            <p className="eyebrow">Session report</p>
+            <RiskBadge score={riskScore} showScore />
           </div>
-        ) : null}
-
-        <section>
-          <h2 className="report-section-title">Overview</h2>
-          <div style={{ display: 'grid', gap: '12px', marginTop: '16px' }}>
-            <MetricRow label="Total Reps" value={report.totalReps} />
-            <MetricRow label="Accuracy" value={`${report.accuracy}%`} />
-            <MetricRow label="Duration" value={formatDuration(report.duration)} />
-            <MetricRow label="Posture Score" value={report.avgPostureScore} />
-            <MetricRow label="Pressure" value={Math.round(averageFsrValue || 0)} />
-            <MetricRow label="Injury Risk" value={`${injuryRisk.score}% (${injuryRisk.level})`} />
-          </div>
-        </section>
-
-        <section style={{ marginTop: '32px' }}>
-          <h2 className="report-section-title">Summary</h2>
-          <p className="text-secondary" style={{ marginTop: '16px' }}>
-            {insights.summary || `You completed ${report.totalReps} reps with ${report.accuracy}% accuracy.`}
-          </p>
-        </section>
-
-        {insights.improvements?.length ? (
-          <section style={{ marginTop: '32px' }}>
-            <h2 className="report-section-title">Improvements</h2>
-            <ul className="report-list" style={{ marginTop: '16px' }}>
-              {insights.improvements.map((item) => (
-                <li key={item} className="report-list-item">
-                  <span className="text-warning">{'->'}</span>
-                  <span>{item}</span>
-                </li>
-              ))}
-            </ul>
-          </section>
-        ) : null}
-
-        {insights.positiveFeedback?.length ? (
-          <section style={{ marginTop: '32px' }}>
-            <h2 className="report-section-title">What Went Well</h2>
-            <ul className="report-list" style={{ marginTop: '16px' }}>
-              {insights.positiveFeedback.map((item) => (
-                <li key={item} className="report-list-item">
-                  <span className="text-success">OK</span>
-                  <span>{item}</span>
-                </li>
-              ))}
-            </ul>
-          </section>
-        ) : null}
-
-        {(insights.warnings?.length || insights.injuryExplanation) ? (
-          <section style={{ marginTop: '32px' }}>
-            <h2 className="report-section-title">Caution</h2>
-            <div className="report-warning-body" style={{ marginTop: '16px' }}>
-              {insights.warnings?.map((warning) => <p key={warning}>Alert: {warning}</p>)}
-              {insights.injuryExplanation ? <p>{insights.injuryExplanation}</p> : null}
-            </div>
-          </section>
-        ) : null}
-
-        {reps.length ? (
-          <section style={{ marginTop: '32px' }}>
-            <h2 className="report-section-title">Rep History</h2>
-            <div className="report-table-wrap" style={{ marginTop: '16px' }}>
-              <table className="report-table">
-                <thead>
-                  <tr>
-                    <th>Rep</th>
-                    <th>Form Score</th>
-                    <th>Pressure Score</th>
-                    <th>Avg Pressure</th>
-                    <th>Range</th>
-                    <th>Consistency</th>
-                    <th>Status</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {reps.map((rep) => (
-                    <tr key={rep.repNumber}>
-                      <td className="table-strong">#{rep.repNumber}</td>
-                      <td>
-                        <span className={`table-strong ${rep.formScore >= 60 ? 'text-success' : 'text-danger'}`}>{rep.formScore}</span>
-                      </td>
-                      <td className="text-secondary">{rep.fsrScore ?? '-'}</td>
-                      <td className="text-secondary">{rep.avgFsr ?? '-'}</td>
-                      <td className="text-secondary">
-                        {rep.minAngle !== null && rep.maxAngle !== null ? `${Math.round(rep.minAngle)}° - ${Math.round(rep.maxAngle)}°` : '-'}
-                      </td>
-                      <td className="text-secondary">{rep.fusionScore ?? '-'}</td>
-                      <td>
-                        {rep.correct ? (
-                          <span className="text-success">Good</span>
-                        ) : (
-                          <span className="text-danger">Needs Work</span>
-                        )}
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          </section>
-        ) : null}
-
-        <div className="report-footer" style={{ marginTop: '40px' }}>
-          <button
-            type="button"
-            onClick={handleDownloadPdf}
-            disabled={isDownloadingPdf}
-            className="btn-secondary button-inline"
-          >
-            <ArrowDownToLine className="icon-sm" />
-            {isDownloadingPdf ? 'Generating PDF...' : 'Download Report'}
+          <h1 className="text-[28px] leading-tight font-semibold tracking-tight sm:text-[32px]">Your workout report</h1>
+          {startedAt && !Number.isNaN(startedAt.getTime()) ? (
+            <p className="mt-2 text-fg-2">
+              {startedAt.toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}
+            </p>
+          ) : null}
+        </div>
+        <div className="flex flex-wrap gap-2">
+          <button type="button" onClick={handleDownloadPdf} disabled={isDownloadingPdf} className="btn btn-ghost">
+            <ArrowDownToLine className="size-4" />
+            {isDownloadingPdf ? 'Generating PDF…' : 'Download PDF'}
           </button>
-        </div>
-
-        <div style={{ marginTop: '24px', display: 'flex', justifyContent: 'center' }}>
-          <Link to="/session" className="btn-primary button-inline">
-            <Repeat className="icon-sm" />
-            Start New Session
+          <Link to="/session" className="btn btn-primary">
+            <Repeat className="size-4" />
+            New session
           </Link>
         </div>
-      </div>
-    </div>
-  );
-}
+      </header>
 
-function MetricRow({ label, value }) {
-  return (
-    <div
-      style={{
-        display: 'flex',
-        justifyContent: 'space-between',
-        alignItems: 'center',
-        padding: '12px 0',
-        borderBottom: '1px solid var(--border)',
-      }}
-    >
-      <span style={{ color: 'var(--text-secondary)', fontSize: '0.9rem' }}>{label}</span>
-      <span style={{ color: 'var(--text)', fontFamily: 'var(--font-display)', fontWeight: 600 }}>
-        {value}
-      </span>
-    </div>
-  );
-}
-
-function RepPerformanceChart({ reps }) {
-  if (!reps.length) {
-    return <EmptyChartState message="Complete more reps to render a performance graph." />;
-  }
-
-  const maxScore = Math.max(100, ...reps.flatMap((rep) => [rep.formScore ?? 0, rep.fsrScore ?? 0, rep.fusionScore ?? 0]));
-  const leftPadding = 28;
-  const bottomPadding = 26;
-  const topPadding = 20;
-  const usableWidth = CHART_WIDTH - leftPadding - 20;
-  const usableHeight = CHART_HEIGHT - topPadding - bottomPadding;
-  const stepX = reps.length > 1 ? usableWidth / (reps.length - 1) : 0;
-
-  const lineFromKey = (key) =>
-    reps
-      .map((rep, index) => {
-        const value = rep[key] ?? 0;
-        const x = leftPadding + (stepX * index);
-        const y = topPadding + usableHeight - ((value / maxScore) * usableHeight);
-        return `${x},${y}`;
-      })
-      .join(' ');
-
-  return (
-    <div className="report-chart-shell">
-      <svg viewBox={`0 0 ${CHART_WIDTH} ${CHART_HEIGHT}`} className="w-full h-auto">
-        {[0, 25, 50, 75, 100].map((tick) => {
-          const y = topPadding + usableHeight - ((tick / maxScore) * usableHeight);
-          return (
-            <g key={tick}>
-              <line x1={leftPadding} x2={CHART_WIDTH - 12} y1={y} y2={y} stroke="var(--border)" strokeDasharray="4 8" />
-              <text x={0} y={y + 4} fill="var(--muted)" fontSize="11">
-                {tick}
-              </text>
-            </g>
-          );
-        })}
-
-        <polyline fill="none" stroke="var(--accent)" strokeWidth="4" strokeLinejoin="round" strokeLinecap="round" points={lineFromKey('formScore')} />
-        <polyline fill="none" stroke="var(--blue)" strokeWidth="4" strokeLinejoin="round" strokeLinecap="round" points={lineFromKey('fsrScore')} />
-        <polyline fill="none" stroke="var(--warning)" strokeWidth="4" strokeLinejoin="round" strokeLinecap="round" points={lineFromKey('fusionScore')} />
-
-        {reps.map((rep, index) => {
-          const x = leftPadding + (stepX * index);
-          const formY = topPadding + usableHeight - (((rep.formScore ?? 0) / maxScore) * usableHeight);
-          return (
-            <g key={rep.repNumber}>
-              <circle cx={x} cy={formY} r="5" fill="var(--accent)" />
-              <text x={x} y={CHART_HEIGHT - 6} textAnchor="middle" fill="var(--muted)" fontSize="11">
-                {rep.repNumber}
-              </text>
-            </g>
-          );
-        })}
-      </svg>
-
-      <div className="report-chart-legend">
-        <LegendDot color="var(--accent)" label="Form Score" />
-        <LegendDot color="var(--blue)" label="Pressure Score" />
-        <LegendDot color="var(--warning)" label="Consistency Score" />
-      </div>
-    </div>
-  );
-}
-
-function RiskGauge({ riskScore }) {
-  const clamped = Math.max(0, Math.min(100, riskScore || 0));
-  const rotation = -90 + (clamped / 100) * 180;
-  const tone = clamped >= 60 ? 'danger' : clamped >= 30 ? 'warning' : 'safe';
-
-  return (
-    <div className="risk-gauge">
-      <div className="risk-gauge__dial">
-        <div className="risk-gauge__arc" />
-        <div className={`risk-gauge__needle risk-gauge__needle--${tone}`} style={{ transform: `translateX(-50%) rotate(${rotation}deg)` }} />
-        <div className="risk-gauge__center">
-          <span className="risk-gauge__value">{clamped}%</span>
-          <span className="risk-gauge__label">Risk Score</span>
+      {pdfError ? (
+        <div className="mb-6">
+          <Alert icon={AlertTriangle} title="PDF download issue">{pdfError}</Alert>
         </div>
+      ) : null}
+
+      {/* Headline scores */}
+      <section className="grid gap-4 md:grid-cols-3" aria-label="Headline scores">
+        <div className="card card-pad flex items-center gap-5">
+          <div className={cx('grid size-24 shrink-0 place-items-center rounded-3xl text-5xl font-semibold', gradeStyle(grade))}>
+            {grade}
+          </div>
+          <div>
+            <p className="eyebrow">Overall grade</p>
+            <p className="mt-2 text-sm text-fg-2">
+              {goodReps} of {reps.length || repCountValue} reps hit clean form.
+            </p>
+          </div>
+        </div>
+        <div className="card card-pad flex items-center gap-5">
+          <ScoreRing value={postureScoreValue} size={96} stroke={9} tone={scoreTone(postureScoreValue)} />
+          <div>
+            <p className="eyebrow">Posture score</p>
+            <p className="mt-2 text-sm text-fg-2">Average across every tracked frame.</p>
+          </div>
+        </div>
+        <div className="card card-pad">
+          <p className="eyebrow">Injury risk</p>
+          <RiskGauge score={riskScore} tone={risk.tone} />
+        </div>
+      </section>
+
+      <section className="mt-4 grid grid-cols-2 gap-4 lg:grid-cols-4" aria-label="Session stats">
+        <StatTile label="Total reps" value={repCountValue} icon={Repeat} tone="lime" />
+        <StatTile label="Accuracy" value={report.accuracy ?? '—'} unit="%" icon={Target} tone="fg" progress={report.accuracy ?? 0} />
+        <StatTile label="Duration" value={formatDuration(report.duration)} icon={Clock} tone="fg" />
+        <StatTile label="Avg pressure" value={Math.round(averageFsrValue || 0)} icon={Zap} tone="cyan" />
+      </section>
+
+      {/* Chart */}
+      <section className="card card-pad mt-4" aria-labelledby="chart-title">
+        <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
+          <h2 id="chart-title" className="flex items-center gap-2 font-medium">
+            <TrendingUp className="size-4 text-muted" />
+            Rep-by-rep performance
+          </h2>
+          <div className="flex flex-wrap gap-4 text-xs text-fg-2">
+            <LegendDot color="var(--color-lime)" label="Form" />
+            <LegendDot color="var(--color-cyan)" label="Pressure" />
+            <LegendDot color="var(--color-violet)" label="Consistency" />
+          </div>
+        </div>
+        <RepPerformanceChart reps={reps} />
+      </section>
+
+      {/* Insights */}
+      <section className="mt-4 grid gap-4 lg:grid-cols-3" aria-label="Coaching insights">
+        <div className="card card-pad lg:col-span-3">
+          <p className="eyebrow mb-2">AI summary</p>
+          <p className="text-[15px] leading-relaxed text-fg">
+            {insights.summary || `You completed ${report.totalReps} reps with ${report.accuracy}% accuracy.`}
+          </p>
+        </div>
+        <InsightList title="What went well" icon={CheckCircle2} tone="lime" items={insights.positiveFeedback} empty="Keep training to unlock highlights." />
+        <InsightList title="Focus next" icon={Target} tone="amber" items={insights.improvements} empty="No major corrections this time." />
+        <InsightList
+          title="Caution"
+          icon={AlertTriangle}
+          tone="rose"
+          items={[...(insights.warnings || []), ...(insights.injuryExplanation ? [insights.injuryExplanation] : [])]}
+          empty="No warnings flagged."
+        />
+      </section>
+
+      {/* Rep table */}
+      {reps.length ? (
+        <section className="card mt-4 overflow-hidden" aria-labelledby="reps-title">
+          <h2 id="reps-title" className="px-5 pt-5 pb-3 font-medium sm:px-6">Rep history</h2>
+          <div className="overflow-x-auto">
+            <table className="w-full min-w-[640px] text-sm">
+              <thead>
+                <tr className="border-y border-line text-left text-xs text-muted">
+                  {['Rep', 'Form', 'Pressure score', 'Avg pressure', 'Range', 'Consistency', 'Status'].map((h) => (
+                    <th key={h} scope="col" className="px-5 py-3 font-medium first:pl-6">{h}</th>
+                  ))}
+                </tr>
+              </thead>
+              <tbody className="num">
+                {reps.map((rep) => (
+                  <tr key={rep.repNumber} className="border-b border-line last:border-0 hover:bg-white/[0.02]">
+                    <td className="px-5 py-3 pl-6 text-fg-2">#{rep.repNumber}</td>
+                    <td className={cx('px-5 py-3 font-medium', rep.formScore >= 60 ? 'text-lime' : 'text-rose')}>{rep.formScore}</td>
+                    <td className="px-5 py-3 text-fg-2">{rep.fsrScore ?? '—'}</td>
+                    <td className="px-5 py-3 text-fg-2">{rep.avgFsr ?? '—'}</td>
+                    <td className="px-5 py-3 text-fg-2">
+                      {rep.minAngle != null && rep.maxAngle != null ? `${Math.round(rep.minAngle)}°–${Math.round(rep.maxAngle)}°` : '—'}
+                    </td>
+                    <td className="px-5 py-3 text-fg-2">{rep.fusionScore ?? '—'}</td>
+                    <td className="px-5 py-3 font-sans">
+                      {rep.correct ? <span className="badge badge-good">Good</span> : <span className="badge badge-bad">Needs work</span>}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </section>
+      ) : null}
+    </div>
+  );
+}
+
+function gradeStyle(grade) {
+  const g = String(grade).toUpperCase()[0];
+  if (g === 'A') return 'bg-lime/15 text-lime';
+  if (g === 'B') return 'bg-cyan/15 text-cyan';
+  if (g === 'C') return 'bg-amber/15 text-amber';
+  return 'bg-rose/15 text-rose';
+}
+
+function InsightList({ title, icon, tone, items, empty }) {
+  return (
+    <div className="card card-pad">
+      <div className="mb-4 flex items-center gap-3">
+        <IconChip icon={icon} tone={tone} className="size-8 rounded-lg" />
+        <h3 className="font-medium">{title}</h3>
       </div>
-      <div className="risk-gauge__scale">
+      {items?.length ? (
+        <ul className="flex flex-col gap-2.5">
+          {items.map((item) => (
+            <li key={item} className="flex gap-2.5 text-sm text-fg-2">
+              <span className="mt-2 size-1 shrink-0 rounded-full bg-current opacity-60" aria-hidden />
+              {item}
+            </li>
+          ))}
+        </ul>
+      ) : (
+        <p className="text-sm text-muted">{empty}</p>
+      )}
+    </div>
+  );
+}
+
+function RiskGauge({ score, tone }) {
+  const clamped = Math.max(0, Math.min(100, score || 0));
+  // Semi-circle arc: 180° sweep
+  const r = 70;
+  const cx0 = 90;
+  const cy0 = 86;
+  const arcLength = Math.PI * r;
+  const angle = Math.PI * (1 - clamped / 100);
+  const nx = cx0 + r * Math.cos(angle);
+  const ny = cy0 - r * Math.sin(angle);
+  const color = { lime: 'var(--color-lime)', amber: 'var(--color-amber)', rose: 'var(--color-rose)' }[tone];
+
+  return (
+    <div className="mt-2 flex flex-col items-center">
+      <svg viewBox="0 0 180 100" className="w-full max-w-[220px]" aria-label={`Injury risk ${clamped} percent`} role="img">
+        <path d={`M ${cx0 - r} ${cy0} A ${r} ${r} 0 0 1 ${cx0 + r} ${cy0}`} fill="none" stroke="rgb(255 255 255 / 0.07)" strokeWidth="12" strokeLinecap="round" />
+        <path
+          d={`M ${cx0 - r} ${cy0} A ${r} ${r} 0 0 1 ${cx0 + r} ${cy0}`}
+          fill="none"
+          stroke={color}
+          strokeWidth="12"
+          strokeLinecap="round"
+          strokeDasharray={arcLength}
+          strokeDashoffset={arcLength * (1 - clamped / 100)}
+        />
+        <circle cx={nx} cy={ny} r="7" fill="var(--color-bg)" stroke={color} strokeWidth="3" />
+      </svg>
+      <p className="num -mt-9 text-3xl font-medium">{clamped}%</p>
+      <div className="mt-3 flex w-full max-w-[220px] justify-between text-[11px] text-muted">
         <span>Safe</span>
         <span>Watch</span>
         <span>High</span>
@@ -364,134 +300,69 @@ function RiskGauge({ riskScore }) {
   );
 }
 
-function drawPerformanceChart(pdf, reps, x, y, width, height) {
+function RepPerformanceChart({ reps }) {
   if (!reps.length) {
-    pdf.setFontSize(10);
-    pdf.text('Not enough rep data to plot the chart.', x, y + 10);
-    return;
+    return (
+      <div className="grid h-48 place-items-center rounded-xl border border-dashed border-line-strong text-sm text-muted">
+        Complete more reps to see a performance graph.
+      </div>
+    );
   }
 
-  const chartWidth = width;
-  const chartHeight = height;
   const maxScore = Math.max(100, ...reps.flatMap((rep) => [rep.formScore ?? 0, rep.fsrScore ?? 0, rep.fusionScore ?? 0]));
+  const left = 32;
+  const right = 12;
+  const top = 12;
+  const bottom = 28;
+  const usableWidth = CHART_WIDTH - left - right;
+  const usableHeight = CHART_HEIGHT - top - bottom;
+  const stepX = reps.length > 1 ? usableWidth / (reps.length - 1) : 0;
+  const xAt = (index) => left + (reps.length > 1 ? stepX * index : usableWidth / 2);
+  const yAt = (value) => top + usableHeight - ((value / maxScore) * usableHeight);
 
-  pdf.setDrawColor(220, 220, 220);
-  pdf.roundedRect(x, y, chartWidth, chartHeight, 2, 2);
+  const pointsFor = (key) => reps.map((rep, index) => `${xAt(index)},${yAt(rep[key] ?? 0)}`).join(' ');
+  const formArea = `${left},${top + usableHeight} ${pointsFor('formScore')} ${xAt(reps.length - 1)},${top + usableHeight}`;
 
-  for (let i = 0; i <= 4; i += 1) {
-    const gridY = y + 6 + ((chartHeight - 14) / 4) * i;
-    pdf.setDrawColor(230, 230, 230);
-    pdf.line(x + 8, gridY, x + chartWidth - 6, gridY);
-  }
-
-  const pointsFor = (key) =>
-    reps.map((rep, index) => {
-      const px = x + 12 + (index * ((chartWidth - 24) / Math.max(1, reps.length - 1)));
-      const value = rep[key] ?? 0;
-      const py = y + chartHeight - 8 - ((value / maxScore) * (chartHeight - 18));
-      return [px, py];
-    });
-
-  const drawSeries = (points, color) => {
-    pdf.setDrawColor(...color);
-    pdf.setLineWidth(1.2);
-    for (let i = 1; i < points.length; i += 1) {
-      pdf.line(points[i - 1][0], points[i - 1][1], points[i][0], points[i][1]);
-    }
-    points.forEach(([px, py]) => {
-      pdf.setFillColor(...color);
-      pdf.circle(px, py, 1.2, 'F');
-    });
-  };
-
-  drawSeries(pointsFor('formScore'), [255, 123, 84]);
-  drawSeries(pointsFor('fsrScore'), [122, 215, 240]);
-  drawSeries(pointsFor('fusionScore'), [247, 197, 107]);
-
-  pdf.setFontSize(8);
-  pdf.setTextColor(90, 90, 90);
-  reps.forEach((rep, index) => {
-    const px = x + 12 + (index * ((chartWidth - 24) / Math.max(1, reps.length - 1)));
-    pdf.text(String(rep.repNumber), px - 1.5, y + chartHeight - 2);
-  });
-}
-
-function drawRepTable(pdf, reps, x, startY, width) {
-  let y = startY;
-  const rowHeight = 7;
-  const columns = [
-    ['Rep', 14],
-    ['Form', 22],
-    ['Press', 18],
-    ['Avg', 20],
-    ['Range', 30],
-    ['Consist', 24],
-    ['Status', 22],
-  ];
-
-  pdf.setFillColor(245, 245, 245);
-  pdf.rect(x, y, width, rowHeight, 'F');
-  pdf.setFont('helvetica', 'bold');
-  pdf.setFontSize(8);
-  let currentX = x + 2;
-  columns.forEach(([label, colWidth]) => {
-    pdf.text(label, currentX, y + 4.8);
-    currentX += colWidth;
-  });
-  y += rowHeight;
-
-  pdf.setFont('helvetica', 'normal');
-  reps.slice(0, 18).forEach((rep) => {
-    currentX = x + 2;
-    const values = [
-      `#${rep.repNumber}`,
-      String(rep.formScore ?? '-'),
-      String(rep.fsrScore ?? '-'),
-      String(rep.avgFsr ?? '-'),
-      rep.minAngle !== null && rep.maxAngle !== null ? `${Math.round(rep.minAngle)}-${Math.round(rep.maxAngle)}` : '-',
-      String(rep.fusionScore ?? '-'),
-      rep.correct ? 'Good' : 'Needs Work',
-    ];
-    values.forEach((value, index) => {
-      pdf.text(value, currentX, y + 4.8);
-      currentX += columns[index][1];
-    });
-    y += rowHeight;
-  });
-}
-
-function MiniRiskMetric({ label, value, tone }) {
   return (
-    <div className="card mini-risk-card">
-      <p className="metric-label">{label}</p>
-      <p className={`metric-value ${tone}`}>{value}</p>
-    </div>
-  );
-}
+    <svg viewBox={`0 0 ${CHART_WIDTH} ${CHART_HEIGHT}`} className="h-auto w-full" role="img" aria-label="Line chart of form, pressure and consistency scores per rep">
+      <defs>
+        <linearGradient id="formFill" x1="0" x2="0" y1="0" y2="1">
+          <stop offset="0%" stopColor="var(--color-lime)" stopOpacity="0.22" />
+          <stop offset="100%" stopColor="var(--color-lime)" stopOpacity="0" />
+        </linearGradient>
+      </defs>
 
-function EmptyChartState({ message }) {
-  return (
-    <div className="report-empty-chart">
-      <p>{message}</p>
-    </div>
+      {[0, 25, 50, 75, 100].map((tick) => (
+        <g key={tick}>
+          <line x1={left} x2={CHART_WIDTH - right} y1={yAt(tick)} y2={yAt(tick)} stroke="rgb(255 255 255 / 0.06)" />
+          <text x={left - 8} y={yAt(tick) + 4} fill="var(--color-muted)" fontSize="11" textAnchor="end" fontFamily="var(--font-mono)">
+            {tick}
+          </text>
+        </g>
+      ))}
+
+      <polygon points={formArea} fill="url(#formFill)" />
+      <polyline fill="none" stroke="var(--color-violet)" strokeWidth="2" strokeDasharray="4 5" strokeLinejoin="round" strokeLinecap="round" points={pointsFor('fusionScore')} />
+      <polyline fill="none" stroke="var(--color-cyan)" strokeWidth="2" strokeLinejoin="round" strokeLinecap="round" points={pointsFor('fsrScore')} />
+      <polyline fill="none" stroke="var(--color-lime)" strokeWidth="2.5" strokeLinejoin="round" strokeLinecap="round" points={pointsFor('formScore')} />
+
+      {reps.map((rep, index) => (
+        <g key={rep.repNumber}>
+          <circle cx={xAt(index)} cy={yAt(rep.formScore ?? 0)} r="4" fill="var(--color-card)" stroke={rep.correct ? 'var(--color-lime)' : 'var(--color-rose)'} strokeWidth="2" />
+          <text x={xAt(index)} y={CHART_HEIGHT - 8} textAnchor="middle" fill="var(--color-muted)" fontSize="11" fontFamily="var(--font-mono)">
+            {rep.repNumber}
+          </text>
+        </g>
+      ))}
+    </svg>
   );
 }
 
 function LegendDot({ color, label }) {
   return (
-    <div className="legend-dot">
-      <span className="report-legend-dot" style={{ backgroundColor: color }} />
-      <span>{label}</span>
-    </div>
-  );
-}
-
-function MetricCard({ icon, label, value, color = 'text-primary' }) {
-  return (
-    <div className="card report-metric">
-      {createElement(icon, { className: 'icon-md text-accent' })}
-      <p className={`metric-value tabular-nums ${color}`}>{value}</p>
-      <p className="metric-label">{label}</p>
-    </div>
+    <span className="flex items-center gap-1.5">
+      <span className="size-2 rounded-full" style={{ backgroundColor: color }} />
+      {label}
+    </span>
   );
 }

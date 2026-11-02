@@ -1,8 +1,12 @@
 import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
+import { BarChart3, Check, Flame, Pencil, Target, X } from 'lucide-react';
 import useAuthStore from '../store/useAuthStore';
 import useProfileStore from '../stores/useProfileStore';
-import '../index.css';
+import { PageHeader, RiskBadge, StatTile } from '../components/ui';
+import { getSessionTimestamp } from '../utils/format';
+
+const GOAL_SUGGESTIONS = ['Improve posture', 'Build endurance', 'Recover from injury'];
 
 export default function Profile() {
   const user = useAuthStore((state) => state.user);
@@ -18,11 +22,8 @@ export default function Profile() {
     if (user) fetchProfileMetrics(user);
   }, [user, fetchProfileMetrics]);
 
-  useEffect(() => {
-    setGoalInput(goal || '');
-  }, [goal]);
-
-  const handleSaveGoal = async () => {
+  const handleSaveGoal = async (event) => {
+    event?.preventDefault();
     if (user?.uid) await updateGoal(user.uid, goalInput);
     setIsEditingGoal(false);
   };
@@ -31,151 +32,127 @@ export default function Profile() {
     ? user.name.split(' ').map((n) => n[0]).join('').substring(0, 2).toUpperCase()
     : 'T';
 
-  const riskBadge = (score) => {
-    if (score < 25) return <span className="badge-success">Low Risk</span>;
-    if (score < 55) return <span className="badge-warning">Moderate</span>;
-    return <span className="badge-danger">High Risk</span>;
-  };
-
-  const getSessionTimestamp = (session) => {
-    const ts = session?.startedAt ?? session?.createdAt ?? session?.endedAt;
-    if (!ts) return null;
-    if (typeof ts === 'number') return ts;
-    if (typeof ts?.toDate === 'function') return ts.toDate().getTime();
-    if (typeof ts?.seconds === 'number') return ts.seconds * 1000;
-    const parsed = new Date(ts).getTime();
-    return Number.isNaN(parsed) ? null : parsed;
-  };
-
   return (
-    <div style={{ background: 'var(--bg)', minHeight: '100vh', paddingBottom: '80px' }}>
+    <div className="animate-fade-up">
+      <PageHeader eyebrow="Profile" title="Your profile" />
 
-      <div className="container" style={{ paddingTop: '96px', maxWidth: '800px', margin: '0 auto' }}>
-
-        {/* Page header */}
-        <div style={{ marginBottom: '40px' }}>
-          <p className="section-label">Profile</p>
-          <h1 className="page-title" style={{ fontSize: 'clamp(1.8rem, 3vw, 2.4rem)' }}>Profile</h1>
-        </div>
-
-        {/* ── IDENTITY ── */}
-        <div className="card" style={{ display: 'flex', alignItems: 'center', gap: '24px', marginBottom: '24px', padding: '28px' }}>
-          <div style={{
-            width: '72px', height: '72px', borderRadius: '50%',
-            background: 'var(--accent-dim)', border: '1px solid var(--accent-border)',
-            color: 'var(--accent)', fontFamily: 'var(--font-display)',
-            fontSize: '1.6rem', fontWeight: 700,
-            display: 'flex', alignItems: 'center', justifyContent: 'center',
-            flexShrink: 0,
-          }}>
-            {initials}
+      <div className="grid gap-4 lg:grid-cols-3">
+        {/* Identity */}
+        <section className="card card-pad relative overflow-hidden">
+          <div className="absolute inset-x-0 top-0 h-20 bg-gradient-to-br from-lime/20 via-cyan/10 to-transparent" aria-hidden />
+          <div className="relative">
+            <div className="grid size-16 place-items-center rounded-2xl border-4 border-card bg-lime text-xl font-semibold text-lime-ink">
+              {initials}
+            </div>
+            <p className="mt-4 text-lg font-medium">{user?.name || 'Trainee'}</p>
+            <p className="truncate text-sm text-muted">{user?.email || '—'}</p>
+            <span className="badge badge-neutral mt-4 capitalize">{user?.role || 'trainee'}</span>
           </div>
-          <div>
-            <p style={{ fontFamily: 'var(--font-display)', fontSize: '1.3rem', fontWeight: 700, color: 'var(--text)', marginBottom: '4px' }}>
-              {user?.name || 'Trainee'}
-            </p>
-            <p style={{ color: 'var(--muted)', fontSize: '0.9rem' }}>
-              {user?.email || '—'}
-            </p>
-          </div>
-        </div>
+        </section>
 
-        {/* ── GOAL ── */}
-        <div className="card" style={{ marginBottom: '24px' }}>
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
-            <p className="section-label" style={{ margin: 0 }}>Goal</p>
-            {!isEditingGoal && (
-              <button
-                onClick={() => setIsEditingGoal(true)}
-                className="btn-secondary"
-                style={{ padding: '6px 16px', fontSize: '0.8rem' }}
-              >
-                Edit Goal
+        {/* Goal */}
+        <section className="card card-pad lg:col-span-2" aria-labelledby="goal-title">
+          <div className="mb-4 flex items-center justify-between gap-3">
+            <h2 id="goal-title" className="flex items-center gap-2 font-medium">
+              <Target className="size-4 text-lime" />
+              Training goal
+            </h2>
+            {!isEditingGoal ? (
+              <button type="button" onClick={() => { setGoalInput(goal || ''); setIsEditingGoal(true); }} className="btn btn-ghost btn-sm">
+                <Pencil className="size-3.5" />
+                Edit
               </button>
-            )}
+            ) : null}
           </div>
 
           {isEditingGoal ? (
-            <div style={{ display: 'flex', gap: '12px' }}>
+            <form onSubmit={handleSaveGoal} className="flex flex-col gap-3 sm:flex-row">
+              <label htmlFor="goal-input" className="sr-only">Training goal</label>
               <input
+                id="goal-input"
                 type="text"
-                className="input-field"
+                className="input"
                 value={goalInput}
                 onChange={(e) => setGoalInput(e.target.value)}
-                placeholder="Improve posture, Build endurance, Recover from injury"
+                placeholder="e.g. Improve posture"
                 autoFocus
               />
-              <button onClick={handleSaveGoal} className="btn-primary" style={{ flexShrink: 0 }}>
-                Save
-              </button>
-              <button onClick={() => setIsEditingGoal(false)} className="btn-secondary" style={{ flexShrink: 0 }}>
-                Cancel
-              </button>
-            </div>
+              <div className="flex gap-2">
+                <button type="submit" className="btn btn-primary">
+                  <Check className="size-4" />
+                  Save
+                </button>
+                <button type="button" onClick={() => setIsEditingGoal(false)} className="btn btn-ghost" aria-label="Cancel">
+                  <X className="size-4" />
+                </button>
+              </div>
+            </form>
           ) : (
-            <p style={{ color: 'var(--text)', fontSize: '1.1rem' }}>
-              {goal || <span style={{ color: 'var(--muted)' }}>No goal set yet. Tap Edit Goal to add one.</span>}
+            <p className="text-xl font-medium tracking-tight">
+              {goal || <span className="text-base font-normal text-muted">No goal set yet. Add one to stay focused.</span>}
             </p>
           )}
-          <p style={{ color: 'var(--muted)', fontSize: '0.82rem', marginTop: '12px' }}>
-            Suggestions: Improve posture, Build endurance, Recover from injury.
-          </p>
+
+          <div className="mt-5 flex flex-wrap gap-2">
+            {GOAL_SUGGESTIONS.map((suggestion) => (
+              <button
+                key={suggestion}
+                type="button"
+                onClick={() => {
+                  setGoalInput(suggestion);
+                  setIsEditingGoal(true);
+                }}
+                className="badge badge-neutral h-7 px-3 transition-colors hover:bg-white/10 hover:text-fg"
+              >
+                {suggestion}
+              </button>
+            ))}
+          </div>
+        </section>
+      </div>
+
+      <section className="mt-4 grid grid-cols-1 gap-4 sm:grid-cols-3" aria-label="Your stats">
+        <StatTile label="Current streak" value={streak ?? 0} unit="days" icon={Flame} tone="amber" />
+        <StatTile label="Total sessions" value={totalSessions ?? 0} icon={BarChart3} tone="cyan" />
+        <StatTile label="Accuracy rate" value={accuracyRate ?? 0} unit="%" icon={Target} tone="lime" progress={accuracyRate ?? 0} />
+      </section>
+
+      <section className="mt-10" aria-labelledby="recent-title">
+        <div className="mb-4 flex items-center justify-between">
+          <h2 id="recent-title" className="text-lg font-medium">Recent activity</h2>
+          <Link to="/history" className="text-sm text-fg-2 hover:text-fg">View all →</Link>
         </div>
 
-        {/* ── STATS ── */}
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: '16px', marginBottom: '32px' }}>
-          <StatCard emoji="🔥" label="Streak" value={`${streak ?? 0}`} unit="days" />
-          <StatCard emoji="📊" label="Sessions" value={`${totalSessions ?? 0}`} unit="total" />
-          <StatCard emoji="⚡" label="Accuracy Rate" value={`${accuracyRate ?? 0}%`} accent />
-        </div>
-
-        {/* ── RECENT ACTIVITY ── */}
-        <div>
-          <h2 style={{ fontFamily: 'var(--font-display)', fontSize: '1.2rem', color: 'var(--text)', marginBottom: '20px' }}>
-            Recent Activity
-          </h2>
-
-          {isLoading ? (
-            <p style={{ color: 'var(--muted)' }}>Loading...</p>
-          ) : recentSessions?.length > 0 ? (
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
-              {recentSessions.slice(0, 3).map((sess, idx) => (
-                <div key={idx} className="card" style={{
-                  display: 'flex', justifyContent: 'space-between', alignItems: 'center',
-                  padding: '16px 24px',
-                }}>
+        {isLoading ? (
+          <div className="grid gap-3">
+            {[0, 1, 2].map((i) => <div key={i} className="skeleton h-16" />)}
+          </div>
+        ) : recentSessions?.length > 0 ? (
+          <ul className="card divide-y divide-line">
+            {recentSessions.slice(0, 3).map((sess, idx) => {
+              const ts = getSessionTimestamp(sess);
+              return (
+                <li key={sess.id || idx} className="flex items-center justify-between gap-4 px-5 py-4">
                   <div>
-                    <p style={{ color: 'var(--text)', fontWeight: 500, marginBottom: '4px', fontSize: '0.95rem' }}>
-                      {new Date(getSessionTimestamp(sess) || 0).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
+                    <p className="font-medium">
+                      {ts ? new Date(ts).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) : 'Unknown date'}
                     </p>
-                    <p style={{ color: 'var(--muted)', fontSize: '0.85rem' }}>
-                      Posture: {sess.avgPostureScore || 0}/100
+                    <p className="text-sm text-muted">
+                      Posture <span className="num text-fg-2">{sess.avgPostureScore || 0}</span>/100
                     </p>
                   </div>
-                  {riskBadge(sess.injuryRiskScore || 0)}
-                </div>
-              ))}
-            </div>
-          ) : (
-            <div className="card" style={{ textAlign: 'center', padding: '40px', color: 'var(--muted)' }}>
-              No recent activity. <Link to="/session" style={{ color: 'var(--accent)' }}>Start a session</Link> to see it here.
-            </div>
-          )}
-        </div>
-      </div>
-    </div>
-  );
-}
-
-function StatCard({ emoji, label, value, unit, accent }) {
-  return (
-    <div className="card" style={{ textAlign: 'center', padding: '24px 16px' }}>
-      <p style={{ fontSize: '1.4rem', marginBottom: '8px' }}>{emoji}</p>
-      <p style={{ color: 'var(--muted)', fontSize: '0.75rem', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: '8px' }}>{label}</p>
-      <p style={{ fontFamily: 'var(--font-display)', fontWeight: 700, fontSize: '1.6rem', color: accent ? 'var(--accent)' : 'var(--text)', lineHeight: 1 }}>
-        {value}
-        {unit && <span style={{ fontSize: '0.9rem', color: 'var(--muted)', fontWeight: 400, marginLeft: '4px' }}>{unit}</span>}
-      </p>
+                  <RiskBadge score={sess.injuryRiskScore || 0} />
+                </li>
+              );
+            })}
+          </ul>
+        ) : (
+          <div className="card px-6 py-10 text-center text-sm text-muted">
+            No recent activity.{' '}
+            <Link to="/session" className="font-medium text-lime hover:underline">Start a session</Link> to see it here.
+          </div>
+        )}
+      </section>
     </div>
   );
 }

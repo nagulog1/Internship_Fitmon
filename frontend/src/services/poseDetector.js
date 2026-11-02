@@ -58,12 +58,12 @@ export function drawLandmarks(canvasCtx, landmarks, canvasWidth, canvasHeight) {
   const drawingUtils = new DrawingUtils(canvasCtx);
 
   drawingUtils.drawConnectors(landmarks, PoseLandmarker.POSE_CONNECTIONS, {
-    color: '#f7c56b88',
+    color: '#c6f24e99',
     lineWidth: 3,
   });
 
   drawingUtils.drawLandmarks(landmarks, {
-    color: '#fff6df',
+    color: '#f3f5f6',
     lineWidth: 1,
     radius: 3.5,
   });
@@ -73,9 +73,9 @@ export function drawLandmarks(canvasCtx, landmarks, canvasWidth, canvasHeight) {
     if (landmark && landmark.visibility > 0.5) {
       canvasCtx.beginPath();
       canvasCtx.arc(landmark.x * canvasWidth, landmark.y * canvasHeight, 6, 0, 2 * Math.PI);
-      canvasCtx.fillStyle = '#ff7b54';
+      canvasCtx.fillStyle = '#c6f24e';
       canvasCtx.fill();
-      canvasCtx.strokeStyle = '#ffffff55';
+      canvasCtx.strokeStyle = '#0a0b0dcc';
       canvasCtx.lineWidth = 2;
       canvasCtx.stroke();
     }

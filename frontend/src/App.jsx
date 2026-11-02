@@ -1,5 +1,5 @@
 import { BrowserRouter, Route, Routes } from 'react-router-dom';
-import Navbar from './components/Navbar';
+import AppLayout from './components/AppLayout';
 import ProtectedRoute from './components/ProtectedRoute';
 import useAuthBootstrap from './hooks/useAuthBootstrap';
 import Dashboard from './pages/Dashboard';
@@ -12,20 +12,17 @@ import Report from './pages/Report';
 import Session from './pages/Session';
 import Workout from './pages/Workout';
 
-function AppShell() {
+export default function App() {
+  useAuthBootstrap();
+
   return (
-    <div className="app-shell app-shell--light">
-      <div className="app-shell__noise" />
-      <div className="app-shell__aurora app-shell__aurora--one" />
-      <div className="app-shell__aurora app-shell__aurora--two" />
-      <Navbar />
+    <BrowserRouter>
+      <Routes>
+        <Route path="/" element={<LandingPage />} />
+        <Route path="/login" element={<Login />} />
 
-      <main className="app-main">
-        <Routes>
-          <Route path="/" element={<LandingPage />} />
-          <Route path="/login" element={<Login />} />
-
-          <Route element={<ProtectedRoute roles={['trainee']} />}>
+        <Route element={<ProtectedRoute roles={['trainee']} />}>
+          <Route element={<AppLayout />}>
             <Route path="/dashboard" element={<Dashboard />} />
             <Route path="/session" element={<Session />} />
             <Route path="/report/:id" element={<Report />} />
@@ -33,22 +30,14 @@ function AppShell() {
             <Route path="/history" element={<History />} />
             <Route path="/workout" element={<Workout />} />
           </Route>
+        </Route>
 
-          <Route element={<ProtectedRoute roles={['mentor']} />}>
+        <Route element={<ProtectedRoute roles={['mentor']} />}>
+          <Route element={<AppLayout />}>
             <Route path="/mentor" element={<Mentor />} />
           </Route>
-        </Routes>
-      </main>
-    </div>
-  );
-}
-
-export default function App() {
-  useAuthBootstrap();
-
-  return (
-    <BrowserRouter>
-      <AppShell />
+        </Route>
+      </Routes>
     </BrowserRouter>
   );
 }

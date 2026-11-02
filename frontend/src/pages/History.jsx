@@ -1,12 +1,15 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
-import { getFirestore, collection, query, where, getDocs } from 'firebase/firestore';
+import { collection, getDocs, getFirestore, query, where } from 'firebase/firestore';
+import { ArrowDownToLine, CalendarDays, Clock, History as HistoryIcon, Repeat, ShieldAlert, Target } from 'lucide-react';
 import { firebaseApp } from '../firebase/config';
 import useAuthStore from '../store/useAuthStore';
 import { buildReportPdf, getReportPdfFileName } from '../utils/reportPdf';
-import '../index.css';
+import { EmptyState, PageHeader, RiskBadge, ScoreRing, StatTile } from '../components/ui';
+import { cx, formatDuration, getRisk, getSessionTimestamp, scoreTone } from '../utils/format';
 
 const db = firebaseApp ? getFirestore(firebaseApp) : null;
+const FILTERS = ['All', 'Low Risk', 'Moderate Risk', 'High Risk'];
 
 export default function History() {
   const user = useAuthStore((state) => state.user);
@@ -46,32 +49,14 @@ export default function History() {
     fetchSessions();
   }, [user]);
 
-  const getRiskLevel = (score) => {
-    if (score < 25) return 'Low Risk';
-    if (score < 55) return 'Moderate Risk';
-    return 'High Risk';
-  };
+  const filteredSessions = sessions.filter((sess) => filter === 'All' || getRisk(sess.injuryRiskScore || 0).filter === filter);
 
-  const getRiskBadge = (score) => {
-    if (score < 25) return { text: 'Low Risk', cls: 'badge-success' };
-    if (score < 55) return { text: 'Moderate', cls: 'badge-warning' };
-    return { text: 'High Risk', cls: 'badge-danger' };
-  };
-
-  const getSessionTimestamp = (session) => {
-    const ts = session?.startedAt ?? session?.createdAt ?? session?.endedAt;
-    if (!ts) return 0;
-    if (typeof ts === 'number') return ts;
-    if (typeof ts?.toDate === 'function') return ts.toDate().getTime();
-    if (typeof ts?.seconds === 'number') return ts.seconds * 1000;
-    const parsed = new Date(ts).getTime();
-    return Number.isNaN(parsed) ? 0 : parsed;
-  };
-
-  const filteredSessions = sessions.filter((sess) => {
-    if (filter === 'All') return true;
-    return getRiskLevel(sess.injuryRiskScore || 0) === filter;
-  });
+  const summary = useMemo(() => {
+    if (!sessions.length) return null;
+    const avg = (key) => Math.round(sessions.reduce((sum, s) => sum + (Number(s[key]) || 0), 0) / sessions.length);
+    const totalReps = sessions.reduce((sum, s) => sum + (s.totalReps ?? (s.correctReps || 0) + (s.incorrectReps || 0)), 0);
+    return { count: sessions.length, posture: avg('avgPostureScore'), risk: avg('injuryRiskScore'), reps: totalReps };
+  }, [sessions]);
 
   const handleDownload = (session) => {
     const pdf = buildReportPdf(session);
@@ -79,117 +64,100 @@ export default function History() {
     pdf.save(getReportPdfFileName(session));
   };
 
-  const formatDuration = (seconds) => {
-    if (!seconds) return '—';
-    const m = Math.floor(seconds / 60);
-    const s = Math.round(seconds % 60);
-    return m > 0 ? `${m}m ${s}s` : `${s}s`;
-  };
-
-  const formatDate = (ts) =>
-    new Date(ts).toLocaleString('en-US', {
-      month: 'short', day: 'numeric', year: 'numeric',
-      hour: 'numeric', minute: '2-digit',
-    });
-
   return (
-    <div style={{ background: 'var(--bg)', minHeight: '100vh', paddingBottom: '80px' }}>
+    <div className="animate-fade-up">
+      <PageHeader eyebrow="History" title="Session history" description="Every session you've completed, with scores and downloadable reports." />
 
-      <div className="container" style={{ paddingTop: '96px', maxWidth: '960px', margin: '0 auto' }}>
+      {summary ? (
+        <section className="mb-8 grid grid-cols-2 gap-3 lg:grid-cols-4" aria-label="Totals">
+          <StatTile label="Sessions" value={summary.count} icon={CalendarDays} />
+          <StatTile label="Total reps" value={summary.reps} icon={Repeat} tone="lime" />
+          <StatTile label="Avg posture" value={summary.posture} icon={Target} tone={scoreTone(summary.posture)} />
+          <StatTile label="Avg risk" value={summary.risk} unit="%" icon={ShieldAlert} tone={getRisk(summary.risk).tone} />
+        </section>
+      ) : null}
 
-        {/* Page header */}
-        <div style={{ marginBottom: '32px' }}>
-          <p className="section-label">History</p>
-          <h1 className="page-title" style={{ fontSize: 'clamp(1.8rem, 3vw, 2.4rem)' }}>Session History</h1>
-        </div>
+      <div aria-label="Filter by risk" className="mb-6 inline-flex max-w-full gap-1 overflow-x-auto rounded-full border border-line bg-surface p-1">
+        {FILTERS.map((f) => (
+          <button
+            key={f}
+            type="button"
+            role="tab"
+            aria-pressed={filter === f}
+            onClick={() => setFilter(f)}
+            className={cx(
+              'h-8 shrink-0 rounded-full px-4 text-[13px] font-medium transition-colors',
+              filter === f ? 'bg-fg text-bg' : 'text-fg-2 hover:text-fg'
+            )}
+          >
+            {f}
+          </button>
+        ))}
+      </div>
 
-        {/* Filter row */}
-        <div style={{ display: 'flex', gap: '8px', marginBottom: '32px', flexWrap: 'wrap' }}>
-          {['All', 'Low Risk', 'Moderate Risk', 'High Risk'].map((f) => (
-            <button
-              key={f}
-              onClick={() => setFilter(f)}
-              className={filter === f ? 'btn-primary' : 'btn-secondary'}
-              style={{ padding: '8px 18px', fontSize: '0.82rem' }}
-            >
-              {f}
-            </button>
+      {loading ? (
+        <div className="grid gap-3" aria-busy="true" aria-label="Loading sessions">
+          {[0, 1, 2].map((i) => (
+            <div key={i} className="skeleton h-24" />
           ))}
         </div>
-
-        {/* Content */}
-        {loading ? (
-          <div style={{ color: 'var(--muted)', textAlign: 'center', padding: '64px' }}>
-            Loading your sessions...
-          </div>
-        ) : filteredSessions.length > 0 ? (
-          <div style={{
-            display: 'grid',
-            gridTemplateColumns: 'repeat(auto-fill, minmax(300px, 1fr))',
-            gap: '20px',
-          }}>
-            {filteredSessions.map((sess) => {
-              const badge = getRiskBadge(sess.injuryRiskScore || 0);
-              const postureColor = (sess.avgPostureScore || 0) >= 70 ? 'var(--accent)' : 'var(--warning)';
-              const repsCount = sess.totalReps ?? (sess.correctReps || 0) + (sess.incorrectReps || 0);
-              return (
-                <div key={sess.id} className="card" style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
-
-                  {/* Top row */}
-                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
-                    <div>
-                      <p style={{ color: 'var(--text)', fontWeight: 500, fontSize: '0.95rem', marginBottom: '4px' }}>
-                        {formatDate(getSessionTimestamp(sess))}
-                      </p>
-                      <p style={{ color: 'var(--muted)', fontSize: '0.82rem' }}>
-                        Duration: {formatDuration(sess.duration)}
-                      </p>
-                    </div>
-                    <span className={badge.cls}>{badge.text}</span>
+      ) : filteredSessions.length > 0 ? (
+        <ul className="grid gap-3">
+          {filteredSessions.map((sess) => {
+            const repsCount = sess.totalReps ?? (sess.correctReps || 0) + (sess.incorrectReps || 0);
+            const posture = sess.avgPostureScore || 0;
+            const ts = getSessionTimestamp(sess);
+            return (
+              <li key={sess.id} className="card flex flex-col gap-4 p-4 transition-colors hover:border-line-strong sm:flex-row sm:items-center sm:gap-6 sm:p-5">
+                <div className="flex items-center gap-4 sm:w-64">
+                  <ScoreRing value={posture} size={56} stroke={5} tone={scoreTone(posture)} />
+                  <div className="min-w-0">
+                    <p className="font-medium">
+                      {ts ? new Date(ts).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) : 'Unknown date'}
+                    </p>
+                    <p className="text-sm text-muted">
+                      {ts ? new Date(ts).toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' }) : ''}
+                    </p>
                   </div>
-
-                  {/* Metrics */}
-                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
-                    <div>
-                      <p style={{ color: 'var(--muted)', fontSize: '0.72rem', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: '6px' }}>
-                        Posture Score
-                      </p>
-                      <p style={{ fontFamily: 'var(--font-display)', fontWeight: 700, fontSize: '1.3rem', color: postureColor }}>
-                        {sess.avgPostureScore || 0}
-                        <span style={{ color: 'var(--muted)', fontWeight: 400, fontSize: '0.9rem' }}>/100</span>
-                      </p>
-                    </div>
-                    <div>
-                      <p style={{ color: 'var(--muted)', fontSize: '0.72rem', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: '6px' }}>
-                        Reps
-                      </p>
-                      <p style={{ fontFamily: 'var(--font-display)', fontWeight: 700, fontSize: '1.3rem', color: 'var(--text)' }}>
-                        {repsCount || 0}
-                      </p>
-                    </div>
-                  </div>
-
-                  {/* Download */}
-                  <button
-                    onClick={() => handleDownload(sess)}
-                    className="btn-secondary"
-                    style={{ width: '100%', padding: '10px', fontSize: '0.85rem', marginTop: 'auto' }}
-                  >
-                    Download PDF
-                  </button>
                 </div>
-              );
-            })}
-          </div>
-        ) : (
-          <div className="card" style={{ textAlign: 'center', padding: '64px 32px' }}>
-            <p style={{ color: 'var(--muted)', marginBottom: '24px' }}>
-              No sessions yet. Start your first session to see your history here.
-            </p>
-            <Link to="/session" className="btn-primary">Start a Session</Link>
-          </div>
-        )}
-      </div>
+
+                <dl className="grid flex-1 grid-cols-3 gap-4 text-sm">
+                  <div>
+                    <dt className="text-xs text-muted">Reps</dt>
+                    <dd className="num mt-0.5 text-base font-medium">{repsCount || 0}</dd>
+                  </div>
+                  <div>
+                    <dt className="flex items-center gap-1 text-xs text-muted"><Clock className="size-3" />Duration</dt>
+                    <dd className="num mt-0.5 text-base font-medium">{formatDuration(sess.duration)}</dd>
+                  </div>
+                  <div>
+                    <dt className="text-xs text-muted">Risk</dt>
+                    <dd className="mt-1"><RiskBadge score={sess.injuryRiskScore || 0} /></dd>
+                  </div>
+                </dl>
+
+                <button type="button" onClick={() => handleDownload(sess)} className="btn btn-ghost btn-sm self-start sm:self-center">
+                  <ArrowDownToLine className="size-4" />
+                  PDF
+                </button>
+              </li>
+            );
+          })}
+        </ul>
+      ) : (
+        <EmptyState
+          icon={HistoryIcon}
+          title={sessions.length ? 'No sessions match this filter' : 'No sessions yet'}
+          description={sessions.length ? 'Try a different risk level.' : 'Start your first session to see your history here.'}
+          action={
+            sessions.length ? (
+              <button type="button" className="btn btn-ghost" onClick={() => setFilter('All')}>Show all</button>
+            ) : (
+              <Link to="/session" className="btn btn-primary">Start a session</Link>
+            )
+          }
+        />
+      )}
     </div>
   );
 }
