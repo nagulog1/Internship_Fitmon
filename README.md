@@ -29,6 +29,17 @@ You need:
 - Optional: a Gemini API key from Google AI Studio, for the coaching notes in reports
 - Optional: an ESP8266 board with an FSR on pin A0, for the band
 
+## Quick start on Windows
+
+If you just want to run it:
+
+1. Install Node.js LTS from https://nodejs.org.
+2. Unzip or clone the project and double-click `start-windows.bat`.
+3. The first time, it creates `backend\.env` and `frontend\.env` and opens them in Notepad. Fill them in (see [Setup](#setup) below for where each value comes from), save, and double-click `start-windows.bat` again.
+4. It installs the packages, starts the backend and the website in two windows, and opens http://localhost:5173.
+
+Close the two windows to stop it.
+
 ## Setup
 
 Clone the repo and open two terminals, one for the backend and one for the frontend.
