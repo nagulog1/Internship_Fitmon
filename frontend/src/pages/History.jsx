@@ -1,11 +1,11 @@
 import { useEffect, useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { collection, getDocs, getFirestore, query, where } from 'firebase/firestore';
-import { ArrowDownToLine, CalendarDays, Clock, History as HistoryIcon, Repeat, ShieldAlert, Target } from 'lucide-react';
+import { ArrowDownToLine } from 'lucide-react';
 import { firebaseApp } from '../firebase/config';
 import useAuthStore from '../store/useAuthStore';
 import { buildReportPdf, getReportPdfFileName } from '../utils/reportPdf';
-import { EmptyState, PageHeader, RiskBadge, ScoreRing, StatTile } from '../components/ui';
+import { EmptyState, Meter, PageHeader, RiskTag } from '../components/ui';
 import { cx, formatDuration, getRisk, getSessionTimestamp, scoreTone } from '../utils/format';
 
 const db = firebaseApp ? getFirestore(firebaseApp) : null;
@@ -65,95 +65,88 @@ export default function History() {
   };
 
   return (
-    <div className="animate-fade-up">
-      <PageHeader eyebrow="History" title="Session history" description="Every session you've completed, with scores and downloadable reports." />
+    <div className="animate-rise">
+      <PageHeader label="Training log" title="History" />
 
       {summary ? (
-        <section className="mb-8 grid grid-cols-2 gap-3 lg:grid-cols-4" aria-label="Totals">
-          <StatTile label="Sessions" value={summary.count} icon={CalendarDays} />
-          <StatTile label="Total reps" value={summary.reps} icon={Repeat} tone="lime" />
-          <StatTile label="Avg posture" value={summary.posture} icon={Target} tone={scoreTone(summary.posture)} />
-          <StatTile label="Avg risk" value={summary.risk} unit="%" icon={ShieldAlert} tone={getRisk(summary.risk).tone} />
-        </section>
+        <dl className="mb-10 grid grid-cols-2 border-b border-ink pb-6 md:grid-cols-4">
+          {[
+            ['Sessions', summary.count],
+            ['Total reps', summary.reps],
+            ['Avg posture', summary.posture],
+            ['Avg risk', `${summary.risk}%`],
+          ].map(([label, value], i) => (
+            <div key={label} className={cx(i > 0 && 'md:border-l md:border-rule md:pl-6', i % 2 === 1 && 'border-l border-rule pl-5', i >= 2 && 'mt-5 md:mt-0')}>
+              <dt className="label">{label}</dt>
+              <dd className="figure mt-2 text-[44px]">{value}</dd>
+            </div>
+          ))}
+        </dl>
       ) : null}
 
-      <div aria-label="Filter by risk" className="mb-6 inline-flex max-w-full gap-1 overflow-x-auto rounded-full border border-line bg-surface p-1">
+      <div className="mb-2 flex gap-6 overflow-x-auto border-b border-rule" aria-label="Filter by risk">
         {FILTERS.map((f) => (
-          <button
-            key={f}
-            type="button"
-            role="tab"
-            aria-pressed={filter === f}
-            onClick={() => setFilter(f)}
-            className={cx(
-              'h-8 shrink-0 rounded-full px-4 text-[13px] font-medium transition-colors',
-              filter === f ? 'bg-fg text-bg' : 'text-fg-2 hover:text-fg'
-            )}
-          >
+          <button key={f} type="button" aria-pressed={filter === f} onClick={() => setFilter(f)} className="tab">
             {f}
           </button>
         ))}
       </div>
 
       {loading ? (
-        <div className="grid gap-3" aria-busy="true" aria-label="Loading sessions">
-          {[0, 1, 2].map((i) => (
-            <div key={i} className="skeleton h-24" />
-          ))}
+        <div className="flex flex-col gap-2 pt-4" aria-busy="true" aria-label="Loading sessions">
+          {[0, 1, 2, 3].map((i) => <div key={i} className="skeleton h-14" />)}
         </div>
       ) : filteredSessions.length > 0 ? (
-        <ul className="grid gap-3">
-          {filteredSessions.map((sess) => {
-            const repsCount = sess.totalReps ?? (sess.correctReps || 0) + (sess.incorrectReps || 0);
-            const posture = sess.avgPostureScore || 0;
-            const ts = getSessionTimestamp(sess);
-            return (
-              <li key={sess.id} className="card flex flex-col gap-4 p-4 transition-colors hover:border-line-strong sm:flex-row sm:items-center sm:gap-6 sm:p-5">
-                <div className="flex items-center gap-4 sm:w-64">
-                  <ScoreRing value={posture} size={56} stroke={5} tone={scoreTone(posture)} />
-                  <div className="min-w-0">
-                    <p className="font-medium">
-                      {ts ? new Date(ts).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) : 'Unknown date'}
-                    </p>
-                    <p className="text-sm text-muted">
-                      {ts ? new Date(ts).toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' }) : ''}
-                    </p>
-                  </div>
-                </div>
-
-                <dl className="grid flex-1 grid-cols-3 gap-4 text-sm">
-                  <div>
-                    <dt className="text-xs text-muted">Reps</dt>
-                    <dd className="num mt-0.5 text-base font-medium">{repsCount || 0}</dd>
-                  </div>
-                  <div>
-                    <dt className="flex items-center gap-1 text-xs text-muted"><Clock className="size-3" />Duration</dt>
-                    <dd className="num mt-0.5 text-base font-medium">{formatDuration(sess.duration)}</dd>
-                  </div>
-                  <div>
-                    <dt className="text-xs text-muted">Risk</dt>
-                    <dd className="mt-1"><RiskBadge score={sess.injuryRiskScore || 0} /></dd>
-                  </div>
-                </dl>
-
-                <button type="button" onClick={() => handleDownload(sess)} className="btn btn-ghost btn-sm self-start sm:self-center">
-                  <ArrowDownToLine className="size-4" />
-                  PDF
-                </button>
-              </li>
-            );
-          })}
-        </ul>
+        <div className="overflow-x-auto">
+          <table className="w-full min-w-[680px] text-sm tabular-nums">
+            <thead>
+              <tr className="border-b border-ink text-left">
+                {['Date', 'Reps', 'Posture', 'Time', 'Risk', ''].map((h) => (
+                  <th key={h || 'actions'} scope="col" className="label py-3 pr-4 font-semibold">{h}</th>
+                ))}
+              </tr>
+            </thead>
+            <tbody>
+              {filteredSessions.map((sess) => {
+                const repsCount = sess.totalReps ?? (sess.correctReps || 0) + (sess.incorrectReps || 0);
+                const posture = sess.avgPostureScore || 0;
+                const ts = getSessionTimestamp(sess);
+                return (
+                  <tr key={sess.id} className="border-b border-rule hover:bg-sheet">
+                    <td className="py-4 pr-4">
+                      <p className="font-semibold">{ts ? new Date(ts).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' }) : 'Unknown'}</p>
+                      <p className="text-xs text-muted">{ts ? new Date(ts).toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' }) : ''}</p>
+                    </td>
+                    <td className="figure py-4 pr-4 text-2xl">{repsCount || 0}</td>
+                    <td className="py-4 pr-4">
+                      <div className="flex items-center gap-3">
+                        <span className="figure w-8 text-2xl">{posture}</span>
+                        <Meter value={posture} segments={10} tone={scoreTone(posture)} className="h-2 w-24" />
+                      </div>
+                    </td>
+                    <td className="py-4 pr-4 text-ink-2">{formatDuration(sess.duration)}</td>
+                    <td className="py-4 pr-4"><RiskTag score={sess.injuryRiskScore || 0} /></td>
+                    <td className="py-4 text-right">
+                      <button type="button" onClick={() => handleDownload(sess)} className="btn-text">
+                        <ArrowDownToLine className="size-3.5" /> PDF
+                      </button>
+                    </td>
+                  </tr>
+                );
+              })}
+            </tbody>
+          </table>
+        </div>
       ) : (
         <EmptyState
-          icon={HistoryIcon}
-          title={sessions.length ? 'No sessions match this filter' : 'No sessions yet'}
-          description={sessions.length ? 'Try a different risk level.' : 'Start your first session to see your history here.'}
+          className="mt-6"
+          title={sessions.length ? 'Nothing at this risk level' : 'Your log is empty'}
+          description={sessions.length ? 'Try another filter.' : 'Finish a session and it shows up here with its scores and a PDF report.'}
           action={
             sessions.length ? (
-              <button type="button" className="btn btn-ghost" onClick={() => setFilter('All')}>Show all</button>
+              <button type="button" className="btn btn-line" onClick={() => setFilter('All')}>Show all</button>
             ) : (
-              <Link to="/session" className="btn btn-primary">Start a session</Link>
+              <Link to="/session" className="btn btn-ink">Start a session</Link>
             )
           }
         />

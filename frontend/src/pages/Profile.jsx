@@ -1,10 +1,9 @@
 import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
-import { BarChart3, Check, Flame, Pencil, Target, X } from 'lucide-react';
 import useAuthStore from '../store/useAuthStore';
 import useProfileStore from '../stores/useProfileStore';
-import { PageHeader, RiskBadge, StatTile } from '../components/ui';
-import { getSessionTimestamp } from '../utils/format';
+import { Meter, PageHeader, RiskTag } from '../components/ui';
+import { cx, getSessionTimestamp } from '../utils/format';
 
 const GOAL_SUGGESTIONS = ['Improve posture', 'Build endurance', 'Recover from injury'];
 
@@ -33,126 +32,115 @@ export default function Profile() {
     : 'T';
 
   return (
-    <div className="animate-fade-up">
-      <PageHeader eyebrow="Profile" title="Your profile" />
+    <div className="animate-rise">
+      <PageHeader label="Profile" title={user?.name || 'Trainee'} />
 
-      <div className="grid gap-4 lg:grid-cols-3">
-        {/* Identity */}
-        <section className="card card-pad relative overflow-hidden">
-          <div className="absolute inset-x-0 top-0 h-20 bg-gradient-to-br from-lime/20 via-cyan/10 to-transparent" aria-hidden />
-          <div className="relative">
-            <div className="grid size-16 place-items-center rounded-2xl border-4 border-card bg-lime text-xl font-semibold text-lime-ink">
-              {initials}
+      <div className="grid gap-12 lg:grid-cols-[280px_1fr]">
+        <aside>
+          <div className="grid aspect-square w-28 place-items-center bg-ink">
+            <span className="display text-5xl text-paper">{initials}</span>
+          </div>
+          <dl className="mt-6 border-t border-ink text-sm">
+            <div className="flex justify-between gap-4 border-b border-rule py-3">
+              <dt className="text-muted">Email</dt>
+              <dd className="truncate font-medium">{user?.email || '—'}</dd>
             </div>
-            <p className="mt-4 text-lg font-medium">{user?.name || 'Trainee'}</p>
-            <p className="truncate text-sm text-muted">{user?.email || '—'}</p>
-            <span className="badge badge-neutral mt-4 capitalize">{user?.role || 'trainee'}</span>
-          </div>
-        </section>
+            <div className="flex justify-between gap-4 border-b border-rule py-3">
+              <dt className="text-muted">Role</dt>
+              <dd className="font-medium capitalize">{user?.role || 'trainee'}</dd>
+            </div>
+          </dl>
+        </aside>
 
-        {/* Goal */}
-        <section className="card card-pad lg:col-span-2" aria-labelledby="goal-title">
-          <div className="mb-4 flex items-center justify-between gap-3">
-            <h2 id="goal-title" className="flex items-center gap-2 font-medium">
-              <Target className="size-4 text-lime" />
-              Training goal
-            </h2>
-            {!isEditingGoal ? (
-              <button type="button" onClick={() => { setGoalInput(goal || ''); setIsEditingGoal(true); }} className="btn btn-ghost btn-sm">
-                <Pencil className="size-3.5" />
-                Edit
-              </button>
-            ) : null}
-          </div>
-
-          {isEditingGoal ? (
-            <form onSubmit={handleSaveGoal} className="flex flex-col gap-3 sm:flex-row">
-              <label htmlFor="goal-input" className="sr-only">Training goal</label>
-              <input
-                id="goal-input"
-                type="text"
-                className="input"
-                value={goalInput}
-                onChange={(e) => setGoalInput(e.target.value)}
-                placeholder="e.g. Improve posture"
-                autoFocus
-              />
-              <div className="flex gap-2">
-                <button type="submit" className="btn btn-primary">
-                  <Check className="size-4" />
-                  Save
+        <div>
+          {/* Goal */}
+          <section aria-labelledby="goal-title" className="border-t-2 border-ink pt-5">
+            <div className="flex items-baseline justify-between gap-3">
+              <h2 id="goal-title" className="label text-ink">Training goal</h2>
+              {!isEditingGoal ? (
+                <button type="button" onClick={() => { setGoalInput(goal || ''); setIsEditingGoal(true); }} className="btn-text">
+                  {goal ? 'Change' : 'Set a goal'}
                 </button>
-                <button type="button" onClick={() => setIsEditingGoal(false)} className="btn btn-ghost" aria-label="Cancel">
-                  <X className="size-4" />
+              ) : null}
+            </div>
+
+            {isEditingGoal ? (
+              <form onSubmit={handleSaveGoal} className="mt-4 flex flex-col gap-3 sm:flex-row">
+                <label htmlFor="goal-input" className="sr-only">Training goal</label>
+                <input id="goal-input" type="text" className="field" value={goalInput} onChange={(e) => setGoalInput(e.target.value)} placeholder="e.g. Improve posture" autoFocus />
+                <div className="flex gap-2">
+                  <button type="submit" className="btn btn-ink">Save</button>
+                  <button type="button" onClick={() => setIsEditingGoal(false)} className="btn btn-line">Cancel</button>
+                </div>
+              </form>
+            ) : (
+              <p className={cx('display mt-4', goal ? 'text-[40px] sm:text-[52px]' : 'text-3xl text-muted')}>{goal || 'No goal yet'}</p>
+            )}
+
+            <div className="mt-5 flex flex-wrap items-center gap-2">
+              <span className="text-xs text-muted">Try:</span>
+              {GOAL_SUGGESTIONS.map((suggestion) => (
+                <button
+                  key={suggestion}
+                  type="button"
+                  onClick={() => { setGoalInput(suggestion); setIsEditingGoal(true); }}
+                  className="tag tag-plain hover:border-ink hover:text-ink"
+                >
+                  {suggestion}
                 </button>
-              </div>
-            </form>
-          ) : (
-            <p className="text-xl font-medium tracking-tight">
-              {goal || <span className="text-base font-normal text-muted">No goal set yet. Add one to stay focused.</span>}
-            </p>
-          )}
+              ))}
+            </div>
+          </section>
 
-          <div className="mt-5 flex flex-wrap gap-2">
-            {GOAL_SUGGESTIONS.map((suggestion) => (
-              <button
-                key={suggestion}
-                type="button"
-                onClick={() => {
-                  setGoalInput(suggestion);
-                  setIsEditingGoal(true);
-                }}
-                className="badge badge-neutral h-7 px-3 transition-colors hover:bg-white/10 hover:text-fg"
-              >
-                {suggestion}
-              </button>
-            ))}
-          </div>
-        </section>
-      </div>
+          {/* Stats */}
+          <dl className="mt-12 grid grid-cols-3 border-y border-ink">
+            <div className="py-5 pr-4">
+              <dt className="label">Streak</dt>
+              <dd className="figure mt-2 text-[48px] text-signal">{streak ?? 0}<span className="ml-1 text-base text-muted">days</span></dd>
+            </div>
+            <div className="border-l border-rule py-5 pl-5">
+              <dt className="label">Sessions</dt>
+              <dd className="figure mt-2 text-[48px]">{totalSessions ?? 0}</dd>
+            </div>
+            <div className="border-l border-rule py-5 pl-5">
+              <dt className="label">Accuracy</dt>
+              <dd className="figure mt-2 text-[48px]">{accuracyRate ?? 0}<span className="ml-0.5 text-base text-muted">%</span></dd>
+              <Meter value={accuracyRate ?? 0} segments={10} className="mt-3 h-2" />
+            </div>
+          </dl>
 
-      <section className="mt-4 grid grid-cols-1 gap-4 sm:grid-cols-3" aria-label="Your stats">
-        <StatTile label="Current streak" value={streak ?? 0} unit="days" icon={Flame} tone="amber" />
-        <StatTile label="Total sessions" value={totalSessions ?? 0} icon={BarChart3} tone="cyan" />
-        <StatTile label="Accuracy rate" value={accuracyRate ?? 0} unit="%" icon={Target} tone="lime" progress={accuracyRate ?? 0} />
-      </section>
+          {/* Recent */}
+          <section className="mt-12" aria-labelledby="recent-title">
+            <div className="mb-3 flex items-baseline justify-between">
+              <h2 id="recent-title" className="label text-ink">Recent sessions</h2>
+              <Link to="/history" className="btn-text">Full log</Link>
+            </div>
 
-      <section className="mt-10" aria-labelledby="recent-title">
-        <div className="mb-4 flex items-center justify-between">
-          <h2 id="recent-title" className="text-lg font-medium">Recent activity</h2>
-          <Link to="/history" className="text-sm text-fg-2 hover:text-fg">View all →</Link>
+            {isLoading ? (
+              <div className="flex flex-col gap-2">{[0, 1, 2].map((i) => <div key={i} className="skeleton h-12" />)}</div>
+            ) : recentSessions?.length > 0 ? (
+              <ul className="border-t border-ink">
+                {recentSessions.slice(0, 3).map((sess, idx) => {
+                  const ts = getSessionTimestamp(sess);
+                  return (
+                    <li key={sess.id || idx} className="flex items-center justify-between gap-4 border-b border-rule py-3.5">
+                      <span className="font-semibold">
+                        {ts ? new Date(ts).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' }) : 'Unknown date'}
+                      </span>
+                      <span className="text-sm text-ink-2 tabular-nums">Posture {sess.avgPostureScore || 0}</span>
+                      <RiskTag score={sess.injuryRiskScore || 0} />
+                    </li>
+                  );
+                })}
+              </ul>
+            ) : (
+              <p className="border-t border-ink pt-4 text-sm text-ink-2">
+                Nothing yet. <Link to="/session" className="font-semibold text-ink underline decoration-signal decoration-2 underline-offset-4">Start a session</Link> and it'll show here.
+              </p>
+            )}
+          </section>
         </div>
-
-        {isLoading ? (
-          <div className="grid gap-3">
-            {[0, 1, 2].map((i) => <div key={i} className="skeleton h-16" />)}
-          </div>
-        ) : recentSessions?.length > 0 ? (
-          <ul className="card divide-y divide-line">
-            {recentSessions.slice(0, 3).map((sess, idx) => {
-              const ts = getSessionTimestamp(sess);
-              return (
-                <li key={sess.id || idx} className="flex items-center justify-between gap-4 px-5 py-4">
-                  <div>
-                    <p className="font-medium">
-                      {ts ? new Date(ts).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) : 'Unknown date'}
-                    </p>
-                    <p className="text-sm text-muted">
-                      Posture <span className="num text-fg-2">{sess.avgPostureScore || 0}</span>/100
-                    </p>
-                  </div>
-                  <RiskBadge score={sess.injuryRiskScore || 0} />
-                </li>
-              );
-            })}
-          </ul>
-        ) : (
-          <div className="card px-6 py-10 text-center text-sm text-muted">
-            No recent activity.{' '}
-            <Link to="/session" className="font-medium text-lime hover:underline">Start a session</Link> to see it here.
-          </div>
-        )}
-      </section>
+      </div>
     </div>
   );
 }

@@ -1,5 +1,4 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { Activity, Camera, CameraOff, Info } from 'lucide-react';
 import Webcam from 'react-webcam';
 import {
   closePoseDetector,
@@ -116,7 +115,7 @@ export default function WebcamFeed() {
   const phase = PHASE_LABELS[repState] || 'Idle';
 
   return (
-    <div className="relative aspect-[4/3] w-full overflow-hidden rounded-3xl border border-line bg-[#050607] sm:aspect-video">
+    <div className="relative aspect-[4/3] w-full overflow-hidden bg-ink sm:aspect-video">
       <Webcam
         ref={webcamRef}
         audio={false}
@@ -137,51 +136,45 @@ export default function WebcamFeed() {
         style={{ transform: 'scaleX(-1)' }}
       />
 
-      <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-black/70 via-transparent to-black/40" />
+      {/* corner registration marks */}
+      {['top-3 left-3 border-t-2 border-l-2', 'top-3 right-3 border-t-2 border-r-2', 'bottom-3 left-3 border-b-2 border-l-2', 'bottom-3 right-3 border-b-2 border-r-2'].map((pos) => (
+        <span key={pos} className={`pointer-events-none absolute size-5 border-paper/70 ${pos}`} aria-hidden />
+      ))}
 
       {cameraError ? (
-        <div className="absolute inset-0 grid place-items-center bg-black/70 p-6 backdrop-blur-sm">
-          <div className="flex max-w-sm flex-col items-center text-center">
-            <span className="grid size-12 place-items-center rounded-2xl bg-rose/15 text-rose">
-              <CameraOff className="size-5" />
-            </span>
-            <p className="mt-4 font-medium">Camera unavailable</p>
-            <p className="mt-1 text-sm text-fg-2">{cameraError}</p>
+        <div className="absolute inset-0 flex items-center bg-ink/90 p-8">
+          <div className="max-w-sm text-paper">
+            <p className="display text-4xl">Camera unavailable</p>
+            <p className="mt-2 text-sm text-paper/75">{cameraError}</p>
           </div>
         </div>
       ) : null}
 
-      {/* Top HUD */}
-      <div className="absolute inset-x-0 top-0 flex items-center justify-between gap-2 p-3 sm:p-4">
-        <span className="flex items-center gap-2 rounded-full bg-black/55 px-3 py-1.5 text-xs font-medium text-fg backdrop-blur-md">
-          <Camera className="size-3.5" />
-          Camera
-        </span>
+      <div className="absolute top-6 left-8 flex items-center gap-2 text-[11px] font-semibold tracking-[0.1em] text-paper uppercase">
         {sessionActive ? (
-          <span className="flex items-center gap-2 rounded-full bg-rose px-3 py-1.5 text-xs font-semibold text-[#1d0606]">
-            <span className="size-1.5 animate-pulse-dot rounded-full bg-[#1d0606]" />
-            REC
-          </span>
-        ) : null}
+          <>
+            <span className="size-2 animate-blink bg-signal" />
+            Rec
+          </>
+        ) : (
+          'Camera'
+        )}
       </div>
 
-      {/* Bottom HUD */}
-      <div className="absolute inset-x-0 bottom-0 flex items-end justify-between gap-3 p-3 sm:p-5">
-        <div className="flex items-center gap-2 rounded-full bg-black/55 px-3 py-1.5 text-xs text-fg-2 backdrop-blur-md">
-          {sessionActive ? <Activity className="size-3.5 text-lime" /> : <Info className="size-3.5" />}
-          <span className="hidden sm:inline">
-            {sessionActive ? 'Move smoothly through the full range.' : 'Allow camera access, then press Start.'}
-          </span>
-          <span className="sm:hidden">{sessionActive ? 'Full range, smooth tempo' : 'Press Start to begin'}</span>
-        </div>
-
-        <div className="flex items-end gap-2">
-          <HudStat label="Angle" value={`${angle}°`} />
-          <HudStat label="Phase" value={phase} />
-          <div className="rounded-2xl bg-black/60 px-4 py-2 text-right backdrop-blur-md">
-            <p className="text-[10px] tracking-wider text-fg-2 uppercase">Reps</p>
-            <p className="num text-3xl leading-none font-medium text-lime sm:text-4xl">{repCount}</p>
+      <div className="absolute right-8 bottom-6 left-8 flex items-end justify-between gap-4">
+        <div className="hidden gap-6 text-paper sm:flex">
+          <div>
+            <p className="text-[10px] font-semibold tracking-[0.1em] text-paper/70 uppercase">Angle</p>
+            <p className="figure text-3xl">{angle}°</p>
           </div>
+          <div>
+            <p className="text-[10px] font-semibold tracking-[0.1em] text-paper/70 uppercase">Phase</p>
+            <p className="figure text-3xl">{phase}</p>
+          </div>
+        </div>
+        <div className="ml-auto bg-signal px-4 pt-2 pb-3 text-ink">
+          <p className="text-[10px] font-semibold tracking-[0.1em] uppercase">Reps</p>
+          <p className="figure text-5xl sm:text-6xl">{repCount}</p>
         </div>
       </div>
     </div>
@@ -197,12 +190,3 @@ const PHASE_LABELS = {
   PEAK: 'Peak',
   EXTENDING: 'Lowering',
 };
-
-function HudStat({ label, value }) {
-  return (
-    <div className="hidden rounded-2xl bg-black/55 px-3 py-2 backdrop-blur-md sm:block">
-      <p className="text-[10px] tracking-wider text-fg-2 uppercase">{label}</p>
-      <p className="num text-base leading-tight font-medium text-fg">{value}</p>
-    </div>
-  );
-}

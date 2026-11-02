@@ -1,6 +1,5 @@
-import { BarChart3, Send, ShieldCheck, Users } from 'lucide-react';
 import useAuthStore from '../store/useAuthStore';
-import { IconChip, PageHeader } from '../components/ui';
+import { PageHeader } from '../components/ui';
 import { cx } from '../utils/format';
 
 const threads = [
@@ -9,57 +8,51 @@ const threads = [
   { title: 'Athlete notes', meta: 'Soon' },
 ];
 
-const cards = [
-  { icon: Users, tone: 'lime', title: 'Athlete overview', copy: 'Keep tabs on progress, patterns, and areas that need attention.' },
-  { icon: BarChart3, tone: 'cyan', title: 'Report review', copy: 'Compare recent sessions and highlight the next focus areas.' },
-  { icon: ShieldCheck, tone: 'violet', title: 'Trusted space', copy: 'A focused workspace to keep coaching notes and guidance in one place.' },
+const notes = [
+  { title: 'Athlete overview', copy: 'Keep tabs on progress, patterns, and areas that need attention.' },
+  { title: 'Report review', copy: 'Compare recent sessions and highlight the next focus areas.' },
+  { title: 'Trusted space', copy: 'Keep coaching notes and guidance in one place.' },
 ];
 
 export default function Mentor() {
   const user = useAuthStore((state) => state.user);
 
   return (
-    <div className="animate-fade-up">
-      <PageHeader eyebrow="Coach studio" title={`Welcome, ${user?.name?.split(' ')[0] || 'coach'}`} description="Review sessions, share notes, and guide safer training." />
+    <div className="animate-rise">
+      <PageHeader label="Coach studio" title={`Hi, ${user?.name?.split(' ')[0] || 'coach'}.`} description="Review sessions, leave notes, and guide safer training." />
 
-      <div className="grid gap-4 lg:grid-cols-[260px_minmax(0,1fr)]">
-        <aside className="card p-3" aria-label="Conversations">
-          <p className="eyebrow px-3 pt-2 pb-3">Inbox</p>
-          <ul className="flex flex-col gap-1">
+      <div className="grid gap-10 lg:grid-cols-[240px_minmax(0,1fr)]">
+        <aside aria-label="Conversations">
+          <p className="label mb-3 text-ink">Inbox</p>
+          <ul className="border-t border-ink">
             {threads.map((thread) => (
-              <li key={thread.title}>
-                <div
-                  className={cx(
-                    'flex items-center justify-between rounded-xl px-3 py-2.5 text-sm',
-                    thread.active ? 'bg-white/[0.07] font-medium text-fg' : 'text-fg-2'
-                  )}
-                >
+              <li key={thread.title} className={cx('flex items-center justify-between border-b border-rule py-3 text-sm', thread.active ? 'font-semibold' : 'text-ink-2')}>
+                <span className="flex items-center gap-2">
+                  {thread.active ? <span className="size-1.5 bg-signal" /> : null}
                   {thread.title}
-                  <span className={cx('badge', thread.active ? 'badge-good' : 'badge-neutral')}>{thread.meta}</span>
-                </div>
+                </span>
+                <span className="text-xs text-muted">{thread.meta}</span>
               </li>
             ))}
           </ul>
         </aside>
 
-        <section className="card flex min-h-[460px] flex-col">
-          <div className="flex-1 space-y-3 p-5">
-            {cards.map((card) => (
-              <div key={card.title} className="flex max-w-lg gap-4 rounded-2xl border border-line bg-white/[0.02] p-4">
-                <IconChip icon={card.icon} tone={card.tone} />
+        <section className="flex min-h-[420px] flex-col border-t-2 border-ink">
+          <ol className="flex-1">
+            {notes.map((note, i) => (
+              <li key={note.title} className="flex gap-5 border-b border-rule py-5">
+                <span className="figure text-3xl text-signal">{String(i + 1).padStart(2, '0')}</span>
                 <div>
-                  <h3 className="font-medium">{card.title}</h3>
-                  <p className="mt-1 text-sm text-fg-2">{card.copy}</p>
+                  <h3 className="font-semibold">{note.title}</h3>
+                  <p className="mt-1 text-sm text-ink-2">{note.copy}</p>
                 </div>
-              </div>
+              </li>
             ))}
-          </div>
-          <div className="flex gap-2 border-t border-line p-4">
+          </ol>
+          <div className="mt-6 flex gap-2">
             <label htmlFor="mentor-message" className="sr-only">Message</label>
-            <input id="mentor-message" type="text" className="input" placeholder="Coach messaging coming soon" readOnly aria-readonly="true" />
-            <button type="button" className="btn btn-primary" disabled aria-label="Send">
-              <Send className="size-4" />
-            </button>
+            <input id="mentor-message" type="text" className="field" placeholder="Messaging is coming soon" readOnly aria-readonly="true" />
+            <button type="button" className="btn btn-ink" disabled>Send</button>
           </div>
         </section>
       </div>

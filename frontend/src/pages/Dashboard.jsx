@@ -1,10 +1,24 @@
-import { createElement } from 'react';
-import { Activity, ArrowRight, ArrowUpRight, Clock, Dumbbell, FileText, Gauge, Repeat, ScanLine, ShieldAlert, Zap } from 'lucide-react';
+import { ArrowRight, ArrowUpRight } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import useAuthStore from '../store/useAuthStore';
 import useSessionStore from '../stores/useSessionStore';
-import { IconChip, PageHeader, ScoreRing, StatTile } from '../components/ui';
-import { getRisk, scoreTone } from '../utils/format';
+import { EmptyState, Figure, Meter, PageHeader, RiskScale } from '../components/ui';
+import { cx, getRisk, scoreTone } from '../utils/format';
+
+const ENGAGEMENT = {
+  good: 'Strong',
+  low: 'Low',
+  low_engagement: 'Low',
+  risk: 'Risk',
+  injury_risk: 'Risk',
+  weak_peak: 'Weak peak',
+};
+
+const shortcuts = [
+  { to: '/history', title: 'History', copy: 'Every session, scored. Download PDFs.' },
+  { to: '/workout', title: 'Workouts', copy: 'Technique videos by muscle group.' },
+  { to: '/profile', title: 'Profile', copy: 'Your goal, streak and accuracy.' },
+];
 
 export default function Dashboard() {
   const user = useAuthStore((state) => state.user);
@@ -15,165 +29,144 @@ export default function Dashboard() {
   const engagementStatus = useSessionStore((state) => state.engagementStatus);
   const lastCompletedReport = useSessionStore((state) => state.lastCompletedReport);
 
-  const firstName = user?.name?.split(' ')[0] || 'Athlete';
+  const firstName = user?.name?.split(' ')[0] || 'there';
   const hour = new Date().getHours();
-  const greeting = hour < 12 ? 'Good morning' : hour < 17 ? 'Good afternoon' : 'Good evening';
+  const greeting = hour < 12 ? 'Morning' : hour < 17 ? 'Afternoon' : 'Evening';
 
   const hasData = sessionActive || Boolean(lastCompletedReport);
   const posture = sessionActive ? postureScore : lastCompletedReport?.avgPostureScore ?? 0;
-  const reps = sessionActive ? repCount : lastCompletedReport?.totalReps;
+  const reps = sessionActive ? repCount : lastCompletedReport?.totalReps ?? 0;
   const pressure = sessionActive
     ? Math.round(averageFsr || 0)
-    : Math.round(lastCompletedReport?.perRepData?.at?.(-1)?.avgFsr ?? 0) || null;
+    : Math.round(lastCompletedReport?.perRepData?.at?.(-1)?.avgFsr ?? 0) || '—';
   const riskScore = lastCompletedReport?.injuryRiskScore ?? 0;
   const risk = getRisk(riskScore);
 
   return (
-    <div className="animate-fade-up">
+    <div className="animate-rise">
       <PageHeader
-        eyebrow={new Date().toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' })}
-        title={`${greeting}, ${firstName}`}
-        description="Keep your training consistent and watch your form improve session by session."
+        label={new Date().toLocaleDateString('en-GB', { weekday: 'long', day: 'numeric', month: 'long' })}
+        title={`${greeting}, ${firstName}.`}
         actions={
-          <Link to="/session" className="btn btn-primary">
-            {sessionActive ? 'Resume session' : 'Start session'}
+          <Link to="/session" className="btn btn-signal btn-lg">
+            {sessionActive ? 'Back to session' : 'Start a session'}
             <ArrowRight className="size-4" />
           </Link>
         }
       />
 
       {sessionActive ? (
-        <Link
-          to="/session"
-          className="mb-6 flex items-center gap-3 rounded-2xl border border-lime/25 bg-lime/[0.06] px-5 py-4 transition-colors hover:bg-lime/[0.09]"
-        >
-          <span className="relative flex size-2.5">
-            <span className="absolute inline-flex size-full animate-ping rounded-full bg-lime opacity-60" />
-            <span className="relative inline-flex size-2.5 rounded-full bg-lime" />
-          </span>
-          <p className="text-sm">
-            <span className="font-medium text-fg">Session in progress.</span>{' '}
-            <span className="text-fg-2">Your live metrics are updating below.</span>
-          </p>
-          <span className="ml-auto flex items-center gap-1 text-sm font-medium text-lime">
-            Resume <ArrowUpRight className="size-4" />
-          </span>
+        <Link to="/session" className="mb-8 flex items-center gap-3 bg-ink px-5 py-3.5 text-paper hover:bg-ink/90">
+          <span className="size-2 animate-blink bg-signal" aria-hidden />
+          <span className="text-sm font-semibold tracking-[0.04em] uppercase">Session recording</span>
+          <span className="hidden text-sm text-paper/70 sm:inline">Numbers below are live.</span>
+          <ArrowUpRight className="ml-auto size-4" />
         </Link>
       ) : null}
 
-      <div className="grid gap-4 lg:grid-cols-3">
-        {/* Snapshot */}
-        <section className="card card-pad lg:col-span-2" aria-labelledby="snapshot-title">
-          <div className="mb-6 flex items-center justify-between gap-3">
-            <div>
-              <p className="eyebrow">{sessionActive ? 'Live now' : 'Last session'}</p>
-              <h2 id="snapshot-title" className="mt-1 text-lg font-medium">
-                {sessionActive ? 'Live session snapshot' : 'Performance snapshot'}
-              </h2>
-            </div>
-            {lastCompletedReport && !sessionActive ? (
-              <Link to="/report/latest" state={{ report: lastCompletedReport }} className="btn btn-ghost btn-sm">
-                <FileText className="size-4" />
-                View report
-              </Link>
-            ) : null}
-          </div>
+      {/* Scoreboard */}
+      <section aria-labelledby="scoreboard-title">
+        <div className="mb-4 flex items-baseline justify-between gap-4">
+          <h2 id="scoreboard-title" className="label text-ink">
+            {sessionActive ? 'Live session' : 'Last session'}
+          </h2>
+          {lastCompletedReport && !sessionActive ? (
+            <Link to="/report/latest" state={{ report: lastCompletedReport }} className="btn-text">
+              Full report <ArrowUpRight className="size-3.5" />
+            </Link>
+          ) : null}
+        </div>
 
-          {hasData ? (
-            <div className="flex flex-col items-center gap-6 sm:flex-row sm:items-stretch">
-              <div className="flex flex-col items-center justify-center rounded-2xl bg-white/[0.02] px-8 py-6">
-                <ScoreRing value={posture} size={148} stroke={12} tone={scoreTone(posture)} label="Posture score" />
-              </div>
-              <div className="grid w-full flex-1 grid-cols-2 gap-3">
-                <StatTile label="Reps" value={reps ?? '—'} icon={Repeat} tone="lime" className="bg-transparent" />
-                <StatTile label="Pressure" value={pressure ?? '—'} icon={Zap} tone="cyan" className="bg-transparent" />
-                {sessionActive ? (
-                  <StatTile label="Form quality" value={formatEngagement(engagementStatus)} icon={Gauge} tone="violet" className="bg-transparent" />
-                ) : (
-                  <StatTile label="Injury risk" value={`${riskScore}`} unit="%" icon={ShieldAlert} tone={risk.tone} className="bg-transparent" />
-                )}
-                <StatTile
-                  label="Accuracy"
-                  value={sessionActive ? '—' : lastCompletedReport?.accuracy ?? '—'}
-                  unit={!sessionActive && lastCompletedReport?.accuracy != null ? '%' : undefined}
-                  icon={Activity}
-                  tone="fg"
-                  className="bg-transparent"
-                />
-              </div>
-            </div>
-          ) : (
-            <div className="flex flex-col items-center gap-4 rounded-2xl border border-dashed border-line-strong px-6 py-12 text-center">
-              <ScoreRing value={0} size={96} stroke={8} display="—" />
-              <div>
-                <p className="font-medium">No sessions yet</p>
-                <p className="mt-1 text-sm text-fg-2">Complete your first session to see posture, reps and risk here.</p>
-              </div>
-              <Link to="/session" className="btn btn-primary btn-sm">
-                Start first session
-              </Link>
-            </div>
-          )}
+        {hasData ? (
+          <div className="grid grid-cols-2 border-y border-ink lg:grid-cols-4">
+            <Cell index={0}>
+              <Figure label="Posture" value={posture} unit="/100" size="lg" tone={scoreTone(posture) === 'good' ? 'ink' : scoreTone(posture)}>
+                <Meter value={posture} tone={scoreTone(posture)} className="mt-4" />
+              </Figure>
+            </Cell>
+            <Cell index={1}>
+              <Figure label="Reps" value={reps} size="lg" tone="signal">
+                <p className="mt-4 text-sm text-ink-2">Bicep curl</p>
+              </Figure>
+            </Cell>
+            <Cell index={2}>
+              <Figure label="Pressure" value={pressure} size="lg" tone="info">
+                <p className="mt-4 text-sm text-ink-2">Avg FSR reading</p>
+              </Figure>
+            </Cell>
+            <Cell index={3}>
+              {sessionActive ? (
+                <Figure label="Form" value={ENGAGEMENT[engagementStatus] || 'Normal'} size="md" className="pt-4" />
+              ) : (
+                <Figure label="Injury risk" value={riskScore} unit="%" size="lg" tone={risk.tone}>
+                  <RiskScale score={riskScore} className="mt-4" />
+                </Figure>
+              )}
+            </Cell>
+          </div>
+        ) : (
+          <EmptyState
+            title="No sessions yet"
+            description="Your first session takes about two minutes. Stand side-on to the camera and curl. FitMon does the counting."
+            action={<Link to="/session" className="btn btn-ink">Start your first session</Link>}
+          />
+        )}
+      </section>
+
+      <div className="mt-14 grid gap-12 lg:grid-cols-[1fr_1.4fr]">
+        {/* Shortcuts */}
+        <section aria-labelledby="shortcuts-title">
+          <h2 id="shortcuts-title" className="label mb-3 text-ink">Go to</h2>
+          <ul className="border-t border-ink">
+            {shortcuts.map((item) => (
+              <li key={item.to} className="border-b border-rule">
+                <Link to={item.to} className="group flex items-center gap-4 py-4">
+                  <span className="display w-32 text-2xl transition-colors group-hover:text-signal">{item.title}</span>
+                  <span className="flex-1 text-sm text-ink-2">{item.copy}</span>
+                  <ArrowRight className="size-4 transition-transform group-hover:translate-x-1" />
+                </Link>
+              </li>
+            ))}
+          </ul>
         </section>
 
-        {/* Quick actions */}
-        <section className="flex flex-col gap-3" aria-label="Quick actions">
-          <QuickAction icon={ScanLine} tone="lime" title="Start a session" desc="Track your form live with your camera." to="/session" />
-          <QuickAction icon={Clock} tone="cyan" title="Session history" desc="Review past sessions and download reports." to="/history" />
-          <QuickAction icon={Dumbbell} tone="violet" title="Workout library" desc="Guided technique videos by muscle group." to="/workout" />
+        {/* How it works */}
+        <section aria-labelledby="how-title">
+          <h2 id="how-title" className="label mb-3 text-ink">How a session works</h2>
+          <ol className="grid border-t border-ink sm:grid-cols-2">
+            {[
+              ['Set up', 'Stand side-on, working arm fully in frame. Good light helps.'],
+              ['Curl', 'Move at your own pace. Cues appear if your elbow drifts.'],
+              ['Stop', 'End the session and FitMon writes your report.'],
+              ['Compare', 'Check History to see if your form is trending up.'],
+            ].map(([title, text], index) => (
+              <li key={title} className="flex gap-4 border-b border-rule py-4 sm:odd:pr-6 sm:even:border-l sm:even:pl-6">
+                <span className="figure text-3xl text-signal">{index + 1}</span>
+                <div>
+                  <p className="font-semibold">{title}</p>
+                  <p className="mt-1 text-sm text-ink-2">{text}</p>
+                </div>
+              </li>
+            ))}
+          </ol>
         </section>
       </div>
-
-      {/* Getting started */}
-      <section className="mt-10" aria-labelledby="steps-title">
-        <h2 id="steps-title" className="mb-4 text-lg font-medium">
-          How a session works
-        </h2>
-        <ol className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
-          {[
-            { title: 'Set up', text: 'Open Session and stand side-on, fully in frame.' },
-            { title: 'Follow cues', text: 'Live guidance flags posture and tempo issues.' },
-            { title: 'Finish', text: 'End the session to generate your AI report.' },
-            { title: 'Improve', text: 'Track progress over time in History.' },
-          ].map((step, index) => (
-            <li key={step.title} className="card p-5">
-              <span className="num text-xs text-lime">0{index + 1}</span>
-              <p className="mt-3 font-medium">{step.title}</p>
-              <p className="mt-1 text-sm text-fg-2">{step.text}</p>
-            </li>
-          ))}
-        </ol>
-      </section>
     </div>
   );
 }
 
-function QuickAction({ icon, title, desc, to, tone }) {
+function Cell({ index, children }) {
   return (
-    <Link to={to} className="card group flex flex-1 items-center gap-4 p-5 transition-colors hover:border-line-strong hover:bg-elevated">
-      <IconChip icon={icon} tone={tone} className="size-11 rounded-2xl" />
-      <div className="min-w-0 flex-1">
-        <p className="font-medium">{title}</p>
-        <p className="mt-0.5 text-sm text-fg-2">{desc}</p>
-      </div>
-      {createElement(ArrowRight, { className: 'size-4 text-muted transition-transform group-hover:translate-x-0.5 group-hover:text-fg', 'aria-hidden': true })}
-    </Link>
+    <div
+      className={cx(
+        'border-rule py-6',
+        index % 2 === 1 ? 'border-l pl-5' : 'pr-5',
+        index >= 2 && 'border-t lg:border-t-0',
+        index > 0 && 'lg:border-l lg:pl-6',
+        index < 3 && 'lg:pr-6'
+      )}
+    >
+      {children}
+    </div>
   );
-}
-
-function formatEngagement(status) {
-  switch (status) {
-    case 'good':
-      return 'Strong';
-    case 'low':
-    case 'low_engagement':
-      return 'Low';
-    case 'risk':
-    case 'injury_risk':
-      return 'Risk';
-    case 'weak_peak':
-      return 'Weak peak';
-    default:
-      return 'Normal';
-  }
 }

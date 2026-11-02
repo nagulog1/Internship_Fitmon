@@ -1,18 +1,8 @@
 import { useState } from 'react';
 import { Link, useLocation } from 'react-router-dom';
-import {
-  AlertTriangle,
-  ArrowDownToLine,
-  CheckCircle2,
-  Clock,
-  FileX2,
-  Repeat,
-  Target,
-  TrendingUp,
-  Zap,
-} from 'lucide-react';
+import { ArrowDownToLine } from 'lucide-react';
 import { buildReportPdf, getReportPdfFileName } from '../utils/reportPdf';
-import { Alert, EmptyState, IconChip, RiskBadge, ScoreRing, StatTile } from '../components/ui';
+import { EmptyState, Figure, Meter, Notice, RiskScale, RiskTag } from '../components/ui';
 import { cx, formatDuration, getRisk, scoreTone } from '../utils/format';
 
 const CHART_WIDTH = 760;
@@ -43,16 +33,15 @@ export default function ReportPage() {
 
   if (!report) {
     return (
-      <div className="animate-fade-up pt-8">
+      <div className="animate-rise">
         <EmptyState
-          icon={FileX2}
           title="No report to show"
-          description="Reports open right after a session ends. Past reports can be downloaded from History."
+          description="Reports open right after a session ends. Older ones are in History as PDFs."
           action={
-            <div className="flex flex-wrap justify-center gap-2">
-              <Link to="/session" className="btn btn-primary">Start a session</Link>
-              <Link to="/history" className="btn btn-ghost">Open history</Link>
-            </div>
+            <>
+              <Link to="/session" className="btn btn-ink">Start a session</Link>
+              <Link to="/history" className="btn btn-line">Open history</Link>
+            </>
           }
         />
       </div>
@@ -73,7 +62,9 @@ export default function ReportPage() {
   const riskScore = calculateInjuryRisk(postureScoreValue, averageFsrValue, repCountValue, report.injuryRiskScore);
   const risk = getRisk(riskScore);
   const startedAt = report.startedAt ? new Date(report.startedAt) : null;
+  const validDate = startedAt && !Number.isNaN(startedAt.getTime());
   const goodReps = reps.filter((rep) => rep.correct).length;
+  const cautions = [...(insights.warnings || []), ...(insights.injuryExplanation ? [insights.injuryExplanation] : [])];
 
   async function handleDownloadPdf() {
     if (isDownloadingPdf) return;
@@ -94,132 +85,121 @@ export default function ReportPage() {
   }
 
   return (
-    <div className="animate-fade-up">
-      <header className="mb-8 flex flex-col gap-5 sm:flex-row sm:items-end sm:justify-between">
+    <div className="animate-rise">
+      <header className="mb-8 flex flex-col gap-5 border-b-2 border-ink pb-5 md:flex-row md:items-end md:justify-between">
         <div>
-          <div className="mb-3 flex flex-wrap items-center gap-2">
-            <p className="eyebrow">Session report</p>
-            <RiskBadge score={riskScore} showScore />
-          </div>
-          <h1 className="text-[28px] leading-tight font-semibold tracking-tight sm:text-[32px]">Your workout report</h1>
-          {startedAt && !Number.isNaN(startedAt.getTime()) ? (
-            <p className="mt-2 text-fg-2">
-              {startedAt.toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}
-            </p>
-          ) : null}
+          <p className="label mb-3">
+            Session report{validDate ? ` · ${startedAt.toLocaleDateString('en-GB', { weekday: 'short', day: 'numeric', month: 'short', year: 'numeric' })}` : ''}
+          </p>
+          <h1 className="display text-[44px] sm:text-[60px]">Bicep curl</h1>
         </div>
         <div className="flex flex-wrap gap-2">
-          <button type="button" onClick={handleDownloadPdf} disabled={isDownloadingPdf} className="btn btn-ghost">
+          <button type="button" onClick={handleDownloadPdf} disabled={isDownloadingPdf} className="btn btn-line">
             <ArrowDownToLine className="size-4" />
-            {isDownloadingPdf ? 'Generating PDF…' : 'Download PDF'}
+            {isDownloadingPdf ? 'Preparing PDF…' : 'Download PDF'}
           </button>
-          <Link to="/session" className="btn btn-primary">
-            <Repeat className="size-4" />
-            New session
-          </Link>
+          <Link to="/session" className="btn btn-signal">Go again</Link>
         </div>
       </header>
 
       {pdfError ? (
         <div className="mb-6">
-          <Alert icon={AlertTriangle} title="PDF download issue">{pdfError}</Alert>
+          <Notice title="PDF download issue">{pdfError}</Notice>
         </div>
       ) : null}
 
-      {/* Headline scores */}
-      <section className="grid gap-4 md:grid-cols-3" aria-label="Headline scores">
-        <div className="card card-pad flex items-center gap-5">
-          <div className={cx('grid size-24 shrink-0 place-items-center rounded-3xl text-5xl font-semibold', gradeStyle(grade))}>
-            {grade}
-          </div>
+      {/* Headline */}
+      <section className="grid gap-px bg-ink/15 sm:grid-cols-[auto_1fr_1fr]" aria-label="Headline scores">
+        <div className="flex items-center gap-5 bg-ink p-6 text-paper sm:pr-10">
+          <span className="figure text-[120px] text-signal">{grade}</span>
           <div>
-            <p className="eyebrow">Overall grade</p>
-            <p className="mt-2 text-sm text-fg-2">
-              {goodReps} of {reps.length || repCountValue} reps hit clean form.
+            <p className="text-[11px] font-semibold tracking-[0.08em] text-paper/70 uppercase">Grade</p>
+            <p className="mt-1 max-w-[12ch] text-sm text-paper/90">
+              {goodReps} of {reps.length || repCountValue} reps clean
             </p>
           </div>
         </div>
-        <div className="card card-pad flex items-center gap-5">
-          <ScoreRing value={postureScoreValue} size={96} stroke={9} tone={scoreTone(postureScoreValue)} />
-          <div>
-            <p className="eyebrow">Posture score</p>
-            <p className="mt-2 text-sm text-fg-2">Average across every tracked frame.</p>
-          </div>
+        <div className="bg-paper p-6">
+          <Figure label="Posture" value={postureScoreValue} unit="/100" size="lg" tone={scoreTone(postureScoreValue) === 'good' ? 'ink' : scoreTone(postureScoreValue)}>
+            <Meter value={postureScoreValue} tone={scoreTone(postureScoreValue)} className="mt-4" />
+          </Figure>
         </div>
-        <div className="card card-pad">
-          <p className="eyebrow">Injury risk</p>
-          <RiskGauge score={riskScore} tone={risk.tone} />
+        <div className="bg-paper p-6">
+          <Figure label="Injury risk" value={riskScore} unit="%" size="lg" tone={risk.tone}>
+            <RiskScale score={riskScore} className="mt-4" />
+          </Figure>
         </div>
       </section>
 
-      <section className="mt-4 grid grid-cols-2 gap-4 lg:grid-cols-4" aria-label="Session stats">
-        <StatTile label="Total reps" value={repCountValue} icon={Repeat} tone="lime" />
-        <StatTile label="Accuracy" value={report.accuracy ?? '—'} unit="%" icon={Target} tone="fg" progress={report.accuracy ?? 0} />
-        <StatTile label="Duration" value={formatDuration(report.duration)} icon={Clock} tone="fg" />
-        <StatTile label="Avg pressure" value={Math.round(averageFsrValue || 0)} icon={Zap} tone="cyan" />
+      <dl className="mt-px grid grid-cols-2 border-y border-ink md:grid-cols-4">
+        {[
+          ['Reps', repCountValue],
+          ['Accuracy', `${report.accuracy ?? '—'}%`],
+          ['Time', formatDuration(report.duration)],
+          ['Avg pressure', Math.round(averageFsrValue || 0)],
+        ].map(([label, value], i) => (
+          <div key={label} className={cx('py-5', i % 2 === 1 && 'border-l border-rule pl-5', i >= 2 && 'border-t border-rule md:border-t-0', i > 0 && 'md:border-l md:pl-6', i === 0 ? 'pr-5' : '')}>
+            <dt className="label">{label}</dt>
+            <dd className="figure mt-2 text-[40px]">{value}</dd>
+          </div>
+        ))}
+      </dl>
+
+      {/* Coach notes */}
+      <section className="mt-12 grid gap-10 lg:grid-cols-[1.2fr_1fr]" aria-label="Coach notes">
+        <div>
+          <h2 className="label mb-3 text-ink">Coach's note</h2>
+          <p className="border-l-4 border-signal pl-5 text-xl leading-snug font-medium text-pretty">
+            {insights.summary || `You completed ${report.totalReps} reps with ${report.accuracy}% accuracy.`}
+          </p>
+        </div>
+        <div className="grid gap-6 sm:grid-cols-3 lg:grid-cols-1">
+          <NoteList title="Worked" mark="+" tone="text-good" items={insights.positiveFeedback} empty="Keep logging sessions to see highlights." />
+          <NoteList title="Fix next" mark="→" tone="text-signal" items={insights.improvements} empty="No corrections this time." />
+          <NoteList title="Watch" mark="!" tone="text-bad" items={cautions} empty="Nothing flagged." />
+        </div>
       </section>
 
       {/* Chart */}
-      <section className="card card-pad mt-4" aria-labelledby="chart-title">
-        <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
-          <h2 id="chart-title" className="flex items-center gap-2 font-medium">
-            <TrendingUp className="size-4 text-muted" />
-            Rep-by-rep performance
-          </h2>
-          <div className="flex flex-wrap gap-4 text-xs text-fg-2">
-            <LegendDot color="var(--color-lime)" label="Form" />
-            <LegendDot color="var(--color-cyan)" label="Pressure" />
-            <LegendDot color="var(--color-violet)" label="Consistency" />
+      <section className="mt-12" aria-labelledby="chart-title">
+        <div className="mb-3 flex flex-wrap items-baseline justify-between gap-3 border-b border-ink pb-3">
+          <h2 id="chart-title" className="label text-ink">Rep by rep</h2>
+          <div className="flex flex-wrap gap-5 text-xs font-semibold tracking-[0.04em] uppercase">
+            <Legend swatch="h-[3px] bg-ink" label="Form" />
+            <Legend swatch="h-[2px] bg-info" label="Pressure" />
+            <Legend swatch="h-0 border-t-2 border-dashed border-muted" label="Consistency" />
+            <Legend swatch="size-2 bg-bad" label="Flagged rep" />
           </div>
         </div>
         <RepPerformanceChart reps={reps} />
       </section>
 
-      {/* Insights */}
-      <section className="mt-4 grid gap-4 lg:grid-cols-3" aria-label="Coaching insights">
-        <div className="card card-pad lg:col-span-3">
-          <p className="eyebrow mb-2">AI summary</p>
-          <p className="text-[15px] leading-relaxed text-fg">
-            {insights.summary || `You completed ${report.totalReps} reps with ${report.accuracy}% accuracy.`}
-          </p>
-        </div>
-        <InsightList title="What went well" icon={CheckCircle2} tone="lime" items={insights.positiveFeedback} empty="Keep training to unlock highlights." />
-        <InsightList title="Focus next" icon={Target} tone="amber" items={insights.improvements} empty="No major corrections this time." />
-        <InsightList
-          title="Caution"
-          icon={AlertTriangle}
-          tone="rose"
-          items={[...(insights.warnings || []), ...(insights.injuryExplanation ? [insights.injuryExplanation] : [])]}
-          empty="No warnings flagged."
-        />
-      </section>
-
-      {/* Rep table */}
+      {/* Table */}
       {reps.length ? (
-        <section className="card mt-4 overflow-hidden" aria-labelledby="reps-title">
-          <h2 id="reps-title" className="px-5 pt-5 pb-3 font-medium sm:px-6">Rep history</h2>
-          <div className="overflow-x-auto">
-            <table className="w-full min-w-[640px] text-sm">
+        <section className="mt-12" aria-labelledby="reps-title">
+          <h2 id="reps-title" className="label mb-3 text-ink">Rep log</h2>
+          <div className="overflow-x-auto border-t-2 border-ink">
+            <table className="w-full min-w-[640px] text-sm tabular-nums">
               <thead>
-                <tr className="border-y border-line text-left text-xs text-muted">
-                  {['Rep', 'Form', 'Pressure score', 'Avg pressure', 'Range', 'Consistency', 'Status'].map((h) => (
-                    <th key={h} scope="col" className="px-5 py-3 font-medium first:pl-6">{h}</th>
+                <tr className="border-b border-ink text-left">
+                  {['#', 'Form', 'Pressure score', 'Avg pressure', 'Range', 'Consistency', ''].map((h) => (
+                    <th key={h || 'status'} scope="col" className="label py-3 pr-4 font-semibold">{h}</th>
                   ))}
                 </tr>
               </thead>
-              <tbody className="num">
+              <tbody>
                 {reps.map((rep) => (
-                  <tr key={rep.repNumber} className="border-b border-line last:border-0 hover:bg-white/[0.02]">
-                    <td className="px-5 py-3 pl-6 text-fg-2">#{rep.repNumber}</td>
-                    <td className={cx('px-5 py-3 font-medium', rep.formScore >= 60 ? 'text-lime' : 'text-rose')}>{rep.formScore}</td>
-                    <td className="px-5 py-3 text-fg-2">{rep.fsrScore ?? '—'}</td>
-                    <td className="px-5 py-3 text-fg-2">{rep.avgFsr ?? '—'}</td>
-                    <td className="px-5 py-3 text-fg-2">
-                      {rep.minAngle != null && rep.maxAngle != null ? `${Math.round(rep.minAngle)}°–${Math.round(rep.maxAngle)}°` : '—'}
+                  <tr key={rep.repNumber} className="border-b border-rule">
+                    <td className="py-2.5 pr-4 font-semibold">{rep.repNumber}</td>
+                    <td className={cx('py-2.5 pr-4 font-semibold', rep.formScore >= 60 ? 'text-ink' : 'text-bad')}>{rep.formScore}</td>
+                    <td className="py-2.5 pr-4 text-ink-2">{rep.fsrScore ?? '—'}</td>
+                    <td className="py-2.5 pr-4 text-ink-2">{rep.avgFsr ?? '—'}</td>
+                    <td className="py-2.5 pr-4 text-ink-2">
+                      {rep.minAngle != null && rep.maxAngle != null ? `${Math.round(rep.minAngle)}–${Math.round(rep.maxAngle)}°` : '—'}
                     </td>
-                    <td className="px-5 py-3 text-fg-2">{rep.fusionScore ?? '—'}</td>
-                    <td className="px-5 py-3 font-sans">
-                      {rep.correct ? <span className="badge badge-good">Good</span> : <span className="badge badge-bad">Needs work</span>}
+                    <td className="py-2.5 pr-4 text-ink-2">{rep.fusionScore ?? '—'}</td>
+                    <td className="py-2.5 text-right">
+                      {rep.correct ? <span className="tag tag-good">Clean</span> : <span className="tag tag-bad">Fix</span>}
                     </td>
                   </tr>
                 ))}
@@ -228,141 +208,90 @@ export default function ReportPage() {
           </div>
         </section>
       ) : null}
+
+      <div className="mt-10 flex justify-between gap-4 border-t border-rule pt-4 text-sm text-ink-2">
+        <RiskTag score={riskScore} showScore />
+        <Link to="/history" className="btn-text">All sessions</Link>
+      </div>
     </div>
   );
 }
 
-function gradeStyle(grade) {
-  const g = String(grade).toUpperCase()[0];
-  if (g === 'A') return 'bg-lime/15 text-lime';
-  if (g === 'B') return 'bg-cyan/15 text-cyan';
-  if (g === 'C') return 'bg-amber/15 text-amber';
-  return 'bg-rose/15 text-rose';
-}
-
-function InsightList({ title, icon, tone, items, empty }) {
+function NoteList({ title, mark, tone, items, empty }) {
   return (
-    <div className="card card-pad">
-      <div className="mb-4 flex items-center gap-3">
-        <IconChip icon={icon} tone={tone} className="size-8 rounded-lg" />
-        <h3 className="font-medium">{title}</h3>
-      </div>
+    <div>
+      <h3 className="label text-ink">{title}</h3>
       {items?.length ? (
-        <ul className="flex flex-col gap-2.5">
+        <ul className="mt-2 flex flex-col gap-1.5">
           {items.map((item) => (
-            <li key={item} className="flex gap-2.5 text-sm text-fg-2">
-              <span className="mt-2 size-1 shrink-0 rounded-full bg-current opacity-60" aria-hidden />
+            <li key={item} className="flex gap-2.5 text-[15px]">
+              <span className={cx('w-3 shrink-0 font-bold', tone)} aria-hidden>{mark}</span>
               {item}
             </li>
           ))}
         </ul>
       ) : (
-        <p className="text-sm text-muted">{empty}</p>
+        <p className="mt-2 text-sm text-muted">{empty}</p>
       )}
     </div>
   );
 }
 
-function RiskGauge({ score, tone }) {
-  const clamped = Math.max(0, Math.min(100, score || 0));
-  // Semi-circle arc: 180° sweep
-  const r = 70;
-  const cx0 = 90;
-  const cy0 = 86;
-  const arcLength = Math.PI * r;
-  const angle = Math.PI * (1 - clamped / 100);
-  const nx = cx0 + r * Math.cos(angle);
-  const ny = cy0 - r * Math.sin(angle);
-  const color = { lime: 'var(--color-lime)', amber: 'var(--color-amber)', rose: 'var(--color-rose)' }[tone];
-
+function Legend({ swatch, label }) {
   return (
-    <div className="mt-2 flex flex-col items-center">
-      <svg viewBox="0 0 180 100" className="w-full max-w-[220px]" aria-label={`Injury risk ${clamped} percent`} role="img">
-        <path d={`M ${cx0 - r} ${cy0} A ${r} ${r} 0 0 1 ${cx0 + r} ${cy0}`} fill="none" stroke="rgb(255 255 255 / 0.07)" strokeWidth="12" strokeLinecap="round" />
-        <path
-          d={`M ${cx0 - r} ${cy0} A ${r} ${r} 0 0 1 ${cx0 + r} ${cy0}`}
-          fill="none"
-          stroke={color}
-          strokeWidth="12"
-          strokeLinecap="round"
-          strokeDasharray={arcLength}
-          strokeDashoffset={arcLength * (1 - clamped / 100)}
-        />
-        <circle cx={nx} cy={ny} r="7" fill="var(--color-bg)" stroke={color} strokeWidth="3" />
-      </svg>
-      <p className="num -mt-9 text-3xl font-medium">{clamped}%</p>
-      <div className="mt-3 flex w-full max-w-[220px] justify-between text-[11px] text-muted">
-        <span>Safe</span>
-        <span>Watch</span>
-        <span>High</span>
-      </div>
-    </div>
+    <span className="flex items-center gap-2">
+      <span className={cx('inline-block w-4', swatch)} />
+      {label}
+    </span>
   );
 }
 
 function RepPerformanceChart({ reps }) {
   if (!reps.length) {
     return (
-      <div className="grid h-48 place-items-center rounded-xl border border-dashed border-line-strong text-sm text-muted">
-        Complete more reps to see a performance graph.
+      <div className="graph-paper grid h-48 place-items-center text-sm text-ink-2">
+        Not enough reps to plot yet.
       </div>
     );
   }
 
   const maxScore = Math.max(100, ...reps.flatMap((rep) => [rep.formScore ?? 0, rep.fsrScore ?? 0, rep.fusionScore ?? 0]));
-  const left = 32;
-  const right = 12;
-  const top = 12;
-  const bottom = 28;
+  const left = 30;
+  const right = 10;
+  const top = 10;
+  const bottom = 26;
   const usableWidth = CHART_WIDTH - left - right;
   const usableHeight = CHART_HEIGHT - top - bottom;
   const stepX = reps.length > 1 ? usableWidth / (reps.length - 1) : 0;
   const xAt = (index) => left + (reps.length > 1 ? stepX * index : usableWidth / 2);
   const yAt = (value) => top + usableHeight - ((value / maxScore) * usableHeight);
-
   const pointsFor = (key) => reps.map((rep, index) => `${xAt(index)},${yAt(rep[key] ?? 0)}`).join(' ');
-  const formArea = `${left},${top + usableHeight} ${pointsFor('formScore')} ${xAt(reps.length - 1)},${top + usableHeight}`;
 
   return (
-    <svg viewBox={`0 0 ${CHART_WIDTH} ${CHART_HEIGHT}`} className="h-auto w-full" role="img" aria-label="Line chart of form, pressure and consistency scores per rep">
-      <defs>
-        <linearGradient id="formFill" x1="0" x2="0" y1="0" y2="1">
-          <stop offset="0%" stopColor="var(--color-lime)" stopOpacity="0.22" />
-          <stop offset="100%" stopColor="var(--color-lime)" stopOpacity="0" />
-        </linearGradient>
-      </defs>
-
+    <svg viewBox={`0 0 ${CHART_WIDTH} ${CHART_HEIGHT}`} className="h-auto w-full" role="img" aria-label="Line chart of form, pressure and consistency scores for each rep">
       {[0, 25, 50, 75, 100].map((tick) => (
         <g key={tick}>
-          <line x1={left} x2={CHART_WIDTH - right} y1={yAt(tick)} y2={yAt(tick)} stroke="rgb(255 255 255 / 0.06)" />
-          <text x={left - 8} y={yAt(tick) + 4} fill="var(--color-muted)" fontSize="11" textAnchor="end" fontFamily="var(--font-mono)">
-            {tick}
-          </text>
+          <line x1={left} x2={CHART_WIDTH - right} y1={yAt(tick)} y2={yAt(tick)} stroke="rgb(18 18 18 / 0.1)" />
+          <text x={left - 8} y={yAt(tick) + 4} fill="var(--color-muted)" fontSize="11" fontWeight="600" textAnchor="end">{tick}</text>
         </g>
       ))}
+      <rect x={left} y={yAt(60)} width={usableWidth} height={yAt(0) - yAt(60)} fill="rgb(196 42 28 / 0.04)" />
+      <text x={CHART_WIDTH - right - 4} y={yAt(0) - 8} fill="var(--color-bad)" fontSize="10" fontWeight="700" textAnchor="end" letterSpacing="1">FORM UNDER 60</text>
 
-      <polygon points={formArea} fill="url(#formFill)" />
-      <polyline fill="none" stroke="var(--color-violet)" strokeWidth="2" strokeDasharray="4 5" strokeLinejoin="round" strokeLinecap="round" points={pointsFor('fusionScore')} />
-      <polyline fill="none" stroke="var(--color-cyan)" strokeWidth="2" strokeLinejoin="round" strokeLinecap="round" points={pointsFor('fsrScore')} />
-      <polyline fill="none" stroke="var(--color-lime)" strokeWidth="2.5" strokeLinejoin="round" strokeLinecap="round" points={pointsFor('formScore')} />
+      <polyline fill="none" stroke="var(--color-muted)" strokeWidth="1.5" strokeDasharray="5 5" points={pointsFor('fusionScore')} />
+      <polyline fill="none" stroke="var(--color-info)" strokeWidth="2" points={pointsFor('fsrScore')} />
+      <polyline fill="none" stroke="var(--color-ink)" strokeWidth="3" strokeLinejoin="round" points={pointsFor('formScore')} />
 
       {reps.map((rep, index) => (
         <g key={rep.repNumber}>
-          <circle cx={xAt(index)} cy={yAt(rep.formScore ?? 0)} r="4" fill="var(--color-card)" stroke={rep.correct ? 'var(--color-lime)' : 'var(--color-rose)'} strokeWidth="2" />
-          <text x={xAt(index)} y={CHART_HEIGHT - 8} textAnchor="middle" fill="var(--color-muted)" fontSize="11" fontFamily="var(--font-mono)">
-            {rep.repNumber}
-          </text>
+          {rep.correct ? (
+            <circle cx={xAt(index)} cy={yAt(rep.formScore ?? 0)} r="4" fill="var(--color-paper)" stroke="var(--color-ink)" strokeWidth="2.5" />
+          ) : (
+            <rect x={xAt(index) - 5} y={yAt(rep.formScore ?? 0) - 5} width="10" height="10" fill="var(--color-bad)" />
+          )}
+          <text x={xAt(index)} y={CHART_HEIGHT - 6} textAnchor="middle" fill="var(--color-muted)" fontSize="11" fontWeight="600">{rep.repNumber}</text>
         </g>
       ))}
     </svg>
-  );
-}
-
-function LegendDot({ color, label }) {
-  return (
-    <span className="flex items-center gap-1.5">
-      <span className="size-2 rounded-full" style={{ backgroundColor: color }} />
-      {label}
-    </span>
   );
 }

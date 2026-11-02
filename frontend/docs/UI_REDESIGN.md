@@ -44,17 +44,36 @@ The product idea comes through, but the UI looked like a generic marketing templ
 2. **Data-first screens:** score rings, gauges and color-coded tiles, with greetings and titles demoted.
 3. **One token-based design system** in Tailwind v4, AA contrast, visible focus rings and reduced-motion support.
 
-## New design system
+## Round 2 — removing the "AI-generated" look
+
+The first redesign fixed the usability issues, but it relied on the visual tropes of generated SaaS templates:
+- a near-black UI with a neon accent and glowing blurs
+- a grid-paper hero backdrop, bento cards and colored icon chips
+- score rings everywhere and mono uppercase labels
+- a "NEW" pill and a fake dashboard as the hero image
+
+Round 2 keeps the structure and logic but gives the product its own voice, drawn from training logs, gym scoreboards and printed sports scorecards.
+
+| Before (round 1) | After (round 2) |
+|---|---|
+| Dark UI, neon lime, glow and blur | Warm paper `#f2f0ea`, black ink, a single safety-orange signal color |
+| Geist + Geist Mono | Archivo variable: condensed heavy display for headlines and numbers, normal width for text |
+| Rounded floating cards, colored icon chips | Square corners, thin rules and full-width bands. Cards only where content needs a surface |
+| Score rings, gauges | Scoreboard figures, segmented meters, a linear Safe → Watch → High risk scale |
+| Fake dashboard mock-up in the hero | Annotated line drawing of a bicep curl (`CurlDiagram`) showing what the product measures |
+| SaaS sidebar | Masthead with text navigation and an orange underline for the active page. Bottom tab bar on mobile |
+| Generic marketing copy | Plain, specific copy ("tells you what to fix before it turns into a sore elbow") |
+
+## Design system (current)
 
 | Token | Value | Use |
 |---|---|---|
-| `bg` / `surface` / `card` / `elevated` | `#0a0b0d` / `#111316` / `#15171b` / `#1b1e23` | Dark layered surfaces |
-| `fg` / `fg-2` / `muted` | `#f3f5f6` / `#b4bac0` / `#8a9198` | Text (muted is about 6:1 on `bg`) |
-| `lime` | `#c6f24e` | Primary actions, good form, "live" |
-| `cyan` | `#5ad8e6` | Pressure / sensor data |
-| `amber` | `#ffb547` | Moderate risk, caution |
-| `rose` | `#ff6b6b` | High risk, end session |
+| `paper` / `paper-2` / `sheet` | `#f2f0ea` / `#e8e5dc` / `#fbfaf7` | Page, fills, raised surfaces |
+| `ink` / `ink-2` / `muted` | `#121212` / `#45423c` / `#6b675f` | Text and rules (muted is about 4.7:1 on paper) |
+| `signal` | `#ff4d00` | Primary action, reps, "recording", emphasis. Text on it is always ink (6:1) |
+| `good` / `warn` / `bad` | `#12723a` / `#8f5200` / `#c42a1c` | Score and risk states, dark enough to read on paper |
+| `info` | `#1d5bc4` | Pressure / sensor data |
 
-- **Type:** Geist (UI) and Geist Mono (all numbers, `tabular-nums`).
-- **Shape:** 16–24px card radius, pill buttons, 1px hairline borders (`white/8%`).
-- **Components** (in `src/index.css` and `src/components/ui.jsx`): `btn`, `card`, `badge-*`, `input`, `eyebrow`, `PageHeader`, `StatTile`, `ScoreRing`, `RiskBadge`, `EmptyState`.
+- **Classes** (`src/index.css`): `display`, `figure`, `label`, `btn` (`-ink`, `-signal`, `-line`, `-bad`, `-text`), `tag-*`, `field`, `tab`, `sheet`, `skeleton`, `graph-paper`.
+- **Components** (`src/components/ui.jsx`): `Logo`, `PageHeader`, `Figure`, `Meter`, `RiskScale`, `RiskTag`, `EmptyState`, `Notice`, `CurlDiagram`.
+- **Helpers** (`src/utils/format.js`): `cx`, `scoreTone`, `getRisk`, `getSessionTimestamp`, `formatDuration`.

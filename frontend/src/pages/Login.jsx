@@ -1,16 +1,10 @@
 import { useEffect, useState } from 'react';
 import { signInWithPopup } from 'firebase/auth';
-import { AlertTriangle, ArrowLeft, FileText, ScanLine, ShieldCheck } from 'lucide-react';
+import { ArrowLeft } from 'lucide-react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { auth, googleProvider, hasFirebaseConfig } from '../firebase/config';
 import useAuthStore from '../store/useAuthStore';
-import { Alert, IconChip, Logo } from '../components/ui';
-
-const highlights = [
-  { icon: ScanLine, title: 'Live form tracking', copy: 'Computer vision scores every rep in real time.' },
-  { icon: ShieldCheck, title: 'Injury risk scoring', copy: 'Pressure + posture fused into one safety score.' },
-  { icon: FileText, title: 'AI session reports', copy: 'Coaching insights and a PDF after each workout.' },
-];
+import { CurlDiagram, Logo, Notice } from '../components/ui';
 
 export default function Login() {
   const navigate = useNavigate();
@@ -44,72 +38,56 @@ export default function Login() {
   const error = localError || storeError;
 
   return (
-    <div className="grid min-h-screen bg-bg lg:grid-cols-2">
-      {/* Brand panel */}
-      <aside className="relative hidden overflow-hidden border-r border-line bg-surface lg:flex lg:flex-col lg:justify-between lg:p-12">
-        <div className="grid-bg absolute inset-0 [mask-image:radial-gradient(ellipse_at_top_left,black,transparent_70%)]" aria-hidden />
-        <div className="absolute -top-40 -left-40 size-[520px] rounded-full bg-lime/10 blur-[120px]" aria-hidden />
-        <div className="relative">
-          <Logo />
+    <div className="grid min-h-screen bg-paper lg:grid-cols-[1.1fr_1fr]">
+      <aside className="relative hidden flex-col justify-between overflow-hidden bg-ink p-12 text-paper lg:flex">
+        <Logo inverted />
+        <div>
+          <CurlDiagram inverted className="mb-10 w-full max-w-[340px]" />
+          <p className="display text-[64px] xl:text-[80px]">
+            Every rep
+            <br />
+            on the <span className="text-signal">record.</span>
+          </p>
         </div>
-        <div className="relative max-w-md">
-          <h2 className="text-4xl leading-[1.1] font-semibold tracking-tight text-balance">
-            Every rep, measured. <span className="text-muted">Every risk, visible.</span>
-          </h2>
-          <ul className="mt-10 flex flex-col gap-5">
-            {highlights.map((item) => (
-              <li key={item.title} className="flex items-start gap-4">
-                <IconChip icon={item.icon} tone="lime" />
-                <div>
-                  <p className="font-medium">{item.title}</p>
-                  <p className="mt-0.5 text-sm text-fg-2">{item.copy}</p>
-                </div>
-              </li>
-            ))}
-          </ul>
-        </div>
-        <p className="relative text-xs text-muted">© {new Date().getFullYear()} FitMon</p>
+        <p className="text-xs text-paper/60">© {new Date().getFullYear()} FitMon</p>
       </aside>
 
-      {/* Sign-in */}
-      <main className="flex flex-col px-5 py-6 sm:px-10">
+      <main className="flex flex-col px-5 py-6 sm:px-12">
         <div className="flex items-center justify-between">
           <div className="lg:hidden">
             <Logo />
           </div>
-          <Link to="/" className="btn btn-ghost btn-sm ml-auto">
-            <ArrowLeft className="size-4" />
-            Back to site
+          <Link to="/" className="btn-text ml-auto">
+            <ArrowLeft className="size-3.5" /> Back to site
           </Link>
         </div>
 
-        <div className="flex flex-1 items-center justify-center py-12">
-          <div className="w-full max-w-sm animate-fade-up">
-            <h1 className="text-3xl font-semibold tracking-tight">Welcome to FitMon</h1>
-            <p className="mt-2 text-fg-2">Sign in or create your account to start tracking.</p>
+        <div className="flex flex-1 items-center py-12">
+          <div className="w-full max-w-sm animate-rise">
+            <p className="label">Sign in</p>
+            <h1 className="display mt-3 text-[52px]">Let's train.</h1>
+            <p className="mt-3 text-[15px] text-ink-2">
+              One account for sessions, reports and history. New here? Signing in creates it.
+            </p>
 
             <button
               type="button"
               onClick={handleGoogleSignIn}
               disabled={isSubmitting}
-              className="btn btn-lg mt-8 w-full border border-line-strong bg-white text-[#111] hover:bg-white/90"
+              className="btn btn-lg mt-8 w-full border border-ink bg-sheet text-ink normal-case tracking-normal hover:bg-ink hover:text-paper"
             >
-              {isSubmitting ? (
-                <span className="size-4 animate-spin rounded-full border-2 border-[#111]/20 border-t-[#111]" aria-hidden />
-              ) : (
-                <GoogleMark />
-              )}
-              {isSubmitting ? 'Connecting…' : 'Continue with Google'}
+              <GoogleMark />
+              <span className="text-[15px] font-semibold">{isSubmitting ? 'Connecting…' : 'Continue with Google'}</span>
             </button>
 
             {error ? (
               <div className="mt-4">
-                <Alert icon={AlertTriangle}>{error}</Alert>
+                <Notice title="Couldn't sign you in">{error}</Notice>
               </div>
             ) : null}
 
-            <p className="mt-8 text-center text-xs leading-relaxed text-muted">
-              By continuing you agree to use FitMon for training guidance only. It is not a medical device.
+            <p className="mt-10 border-t border-rule pt-4 text-xs leading-relaxed text-muted">
+              FitMon gives training guidance. It isn't a medical device. If something hurts, stop and see a professional.
             </p>
           </div>
         </div>
