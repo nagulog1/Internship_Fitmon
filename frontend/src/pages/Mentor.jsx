@@ -19,40 +19,37 @@ export default function Mentor() {
 
   return (
     <div className="animate-rise">
-      <PageHeader label="Coach studio" title={`Hi, ${user?.name?.split(' ')[0] || 'coach'}.`} description="Review sessions, leave notes, and guide safer training." />
+      <PageHeader kicker="Coach studio" title={`Hi, ${user?.name?.split(' ')[0] || 'coach'}`} description="Review sessions, leave notes, and guide safer training." />
 
-      <div className="grid gap-10 lg:grid-cols-[240px_minmax(0,1fr)]">
-        <aside aria-label="Conversations">
-          <p className="label mb-3 text-ink">Inbox</p>
-          <ul className="border-t border-ink">
+      <div className="grid gap-3 lg:grid-cols-[280px_minmax(0,1fr)]">
+        <aside className="card p-3" aria-label="Conversations">
+          <p className="px-3 pt-3 pb-2 text-sm text-ink-2">Inbox</p>
+          <ul className="flex flex-col gap-1">
             {threads.map((thread) => (
-              <li key={thread.title} className={cx('flex items-center justify-between border-b border-rule py-3 text-sm', thread.active ? 'font-semibold' : 'text-ink-2')}>
-                <span className="flex items-center gap-2">
-                  {thread.active ? <span className="size-1.5 bg-signal" /> : null}
-                  {thread.title}
-                </span>
-                <span className="text-xs text-muted">{thread.meta}</span>
+              <li key={thread.title} className={cx('flex items-center justify-between rounded-full px-4 py-2.5 text-sm', thread.active ? 'bg-ink text-white' : 'text-ink-2')}>
+                {thread.title}
+                <span className={cx('text-xs', thread.active ? 'text-volt' : 'text-muted')}>{thread.meta}</span>
               </li>
             ))}
           </ul>
         </aside>
 
-        <section className="flex min-h-[420px] flex-col border-t-2 border-ink">
-          <ol className="flex-1">
+        <section className="card flex min-h-[440px] flex-col p-6 sm:p-8">
+          <ol className="grid flex-1 gap-3 md:grid-cols-3">
             {notes.map((note, i) => (
-              <li key={note.title} className="flex gap-5 border-b border-rule py-5">
-                <span className="figure text-3xl text-signal">{String(i + 1).padStart(2, '0')}</span>
-                <div>
-                  <h3 className="font-semibold">{note.title}</h3>
+              <li key={note.title} className="flex flex-col justify-between rounded-[4px] bg-canvas p-6">
+                <span className="stat text-5xl text-ink/15">0{i + 1}</span>
+                <div className="mt-10">
+                  <h3 className="font-medium">{note.title}</h3>
                   <p className="mt-1 text-sm text-ink-2">{note.copy}</p>
                 </div>
               </li>
             ))}
           </ol>
-          <div className="mt-6 flex gap-2">
+          <div className="mt-8 flex items-end gap-3">
             <label htmlFor="mentor-message" className="sr-only">Message</label>
             <input id="mentor-message" type="text" className="field" placeholder="Messaging is coming soon" readOnly aria-readonly="true" />
-            <button type="button" className="btn btn-ink" disabled>Send</button>
+            <button type="button" className="btn btn-dark" disabled>Send</button>
           </div>
         </section>
       </div>

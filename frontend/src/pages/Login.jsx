@@ -4,7 +4,7 @@ import { ArrowLeft } from 'lucide-react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { auth, googleProvider, hasFirebaseConfig } from '../firebase/config';
 import useAuthStore from '../store/useAuthStore';
-import { CurlDiagram, Logo, Notice } from '../components/ui';
+import { Logo, Notice } from '../components/ui';
 
 export default function Login() {
   const navigate = useNavigate();
@@ -38,46 +38,47 @@ export default function Login() {
   const error = localError || storeError;
 
   return (
-    <div className="grid min-h-screen bg-paper lg:grid-cols-[1.1fr_1fr]">
-      <aside className="relative hidden flex-col justify-between overflow-hidden bg-ink p-12 text-paper lg:flex">
-        <Logo inverted />
+    <div className="grid min-h-screen bg-canvas p-3 lg:grid-cols-[1.25fr_1fr]">
+      <aside className="relative isolate hidden overflow-hidden rounded-[4px] bg-ink text-white lg:flex lg:flex-col lg:justify-between lg:p-10">
+        <img src="/landing/hero.jpg" alt="" className="absolute inset-0 -z-20 size-full object-cover object-[60%_35%]" />
+        <div className="photo-scrim absolute inset-0 -z-10" aria-hidden />
+        <div className="flex items-center justify-between">
+          <Logo inverted />
+          <p className="text-sm text-white/80">Built for the gym floor</p>
+        </div>
         <div>
-          <CurlDiagram inverted className="mb-10 w-full max-w-[340px]" />
-          <p className="display text-[64px] xl:text-[80px]">
+          <p className="headline text-[88px] xl:text-[112px]">
             Every rep
             <br />
-            on the <span className="text-signal">record.</span>
+            on the
+            <br />
+            rec<span className="text-volt">/</span>ord
           </p>
+          <p className="lede mt-8 max-w-md text-2xl text-white/90">Scores your posture on every rep, and tells you what to fix.</p>
         </div>
-        <p className="text-xs text-paper/60">© {new Date().getFullYear()} FitMon</p>
       </aside>
 
-      <main className="flex flex-col px-5 py-6 sm:px-12">
+      <main className="flex flex-col px-3 py-4 sm:px-10">
         <div className="flex items-center justify-between">
           <div className="lg:hidden">
             <Logo />
           </div>
-          <Link to="/" className="btn-text ml-auto">
+          <Link to="/" className="link ml-auto">
             <ArrowLeft className="size-3.5" /> Back to site
           </Link>
         </div>
 
-        <div className="flex flex-1 items-center py-12">
+        <div className="flex flex-1 items-center py-16">
           <div className="w-full max-w-sm animate-rise">
-            <p className="label">Sign in</p>
-            <h1 className="display mt-3 text-[52px]">Let's train.</h1>
-            <p className="mt-3 text-[15px] text-ink-2">
+            <p className="kicker">Sign in</p>
+            <h1 className="headline mt-5 text-[64px]">Let's train</h1>
+            <p className="mt-5 text-base text-ink-2">
               One account for sessions, reports and history. New here? Signing in creates it.
             </p>
 
-            <button
-              type="button"
-              onClick={handleGoogleSignIn}
-              disabled={isSubmitting}
-              className="btn btn-lg mt-8 w-full border border-ink bg-sheet text-ink normal-case tracking-normal hover:bg-ink hover:text-paper"
-            >
+            <button type="button" onClick={handleGoogleSignIn} disabled={isSubmitting} className="btn btn-lg btn-dark mt-10 w-full normal-case tracking-normal">
               <GoogleMark />
-              <span className="text-[15px] font-semibold">{isSubmitting ? 'Connecting…' : 'Continue with Google'}</span>
+              <span className="text-[15px]">{isSubmitting ? 'Connecting…' : 'Continue with Google'}</span>
             </button>
 
             {error ? (
@@ -86,7 +87,7 @@ export default function Login() {
               </div>
             ) : null}
 
-            <p className="mt-10 border-t border-rule pt-4 text-xs leading-relaxed text-muted">
+            <p className="mt-12 border-t border-line pt-5 text-xs leading-relaxed text-muted">
               FitMon gives training guidance. It isn't a medical device. If something hurts, stop and see a professional.
             </p>
           </div>
@@ -98,11 +99,13 @@ export default function Login() {
 
 function GoogleMark() {
   return (
-    <svg viewBox="0 0 24 24" className="size-[18px]" aria-hidden>
-      <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92a5.06 5.06 0 0 1-2.2 3.32v2.77h3.57c2.08-1.92 3.27-4.74 3.27-8.1z" />
-      <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84A11 11 0 0 0 12 23z" />
-      <path fill="#FBBC05" d="M5.84 14.1A6.6 6.6 0 0 1 5.5 12c0-.73.13-1.44.34-2.1V7.07H2.18A11 11 0 0 0 1 12c0 1.78.43 3.45 1.18 4.93l3.66-2.83z" />
-      <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.83c.87-2.6 3.3-4.52 6.16-4.52z" />
-    </svg>
+    <span className="grid size-6 place-items-center rounded-full bg-white">
+      <svg viewBox="0 0 24 24" className="size-3.5" aria-hidden>
+        <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92a5.06 5.06 0 0 1-2.2 3.32v2.77h3.57c2.08-1.92 3.27-4.74 3.27-8.1z" />
+        <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84A11 11 0 0 0 12 23z" />
+        <path fill="#FBBC05" d="M5.84 14.1A6.6 6.6 0 0 1 5.5 12c0-.73.13-1.44.34-2.1V7.07H2.18A11 11 0 0 0 1 12c0 1.78.43 3.45 1.18 4.93l3.66-2.83z" />
+        <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.83c.87-2.6 3.3-4.52 6.16-4.52z" />
+      </svg>
+    </span>
   );
 }

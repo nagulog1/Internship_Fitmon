@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { ArrowDownToLine } from 'lucide-react';
 import { buildReportPdf, getReportPdfFileName } from '../utils/reportPdf';
-import { EmptyState, Figure, Meter, Notice, RiskScale, RiskTag } from '../components/ui';
+import { EmptyState, Meter, Notice, PageHeader, RiskScale, RiskTag, Stat } from '../components/ui';
 import { cx, formatDuration, getRisk, scoreTone } from '../utils/format';
 
 const CHART_WIDTH = 760;
@@ -39,8 +39,8 @@ export default function ReportPage() {
           description="Reports open right after a session ends. Older ones are in History as PDFs."
           action={
             <>
-              <Link to="/session" className="btn btn-ink">Start a session</Link>
-              <Link to="/history" className="btn btn-line">Open history</Link>
+              <Link to="/session" className="btn btn-volt-flat">Start a session</Link>
+              <Link to="/history" className="btn btn-outline">Open history</Link>
             </>
           }
         />
@@ -86,89 +86,95 @@ export default function ReportPage() {
 
   return (
     <div className="animate-rise">
-      <header className="mb-8 flex flex-col gap-5 border-b-2 border-ink pb-5 md:flex-row md:items-end md:justify-between">
-        <div>
-          <p className="label mb-3">
-            Session report{validDate ? ` · ${startedAt.toLocaleDateString('en-GB', { weekday: 'short', day: 'numeric', month: 'short', year: 'numeric' })}` : ''}
-          </p>
-          <h1 className="display text-[44px] sm:text-[60px]">Bicep curl</h1>
-        </div>
-        <div className="flex flex-wrap gap-2">
-          <button type="button" onClick={handleDownloadPdf} disabled={isDownloadingPdf} className="btn btn-line">
-            <ArrowDownToLine className="size-4" />
-            {isDownloadingPdf ? 'Preparing PDF…' : 'Download PDF'}
-          </button>
-          <Link to="/session" className="btn btn-signal">Go again</Link>
-        </div>
-      </header>
+      <PageHeader
+        kicker={`Session report${validDate ? ` · ${startedAt.toLocaleDateString('en-GB', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' })}` : ''}`}
+        title="Bicep curl"
+        actions={
+          <>
+            <button type="button" onClick={handleDownloadPdf} disabled={isDownloadingPdf} className="btn btn-outline">
+              <ArrowDownToLine className="size-4" />
+              {isDownloadingPdf ? 'Preparing PDF…' : 'Download PDF'}
+            </button>
+            <Link to="/session" className="btn btn-volt-flat">Go again</Link>
+          </>
+        }
+      />
 
       {pdfError ? (
-        <div className="mb-6">
+        <div className="mb-3">
           <Notice title="PDF download issue">{pdfError}</Notice>
         </div>
       ) : null}
 
       {/* Headline */}
-      <section className="grid gap-px bg-ink/15 sm:grid-cols-[auto_1fr_1fr]" aria-label="Headline scores">
-        <div className="flex items-center gap-5 bg-ink p-6 text-paper sm:pr-10">
-          <span className="figure text-[120px] text-signal">{grade}</span>
-          <div>
-            <p className="text-[11px] font-semibold tracking-[0.08em] text-paper/70 uppercase">Grade</p>
-            <p className="mt-1 max-w-[12ch] text-sm text-paper/90">
-              {goodReps} of {reps.length || repCountValue} reps clean
+      <section className="grid gap-3 lg:grid-cols-[1fr_1fr_1fr]" aria-label="Headline scores">
+        <div className="relative isolate flex min-h-[260px] flex-col justify-between overflow-hidden rounded-[4px] bg-ink p-6 text-white">
+          <p className="text-sm text-white/75">Grade</p>
+          <div className="flex items-end justify-between gap-4">
+            <span className="stat text-[150px] leading-[0.75] text-volt">{grade}</span>
+            <p className="text-right text-sm text-white/80">
+              {goodReps} of {reps.length || repCountValue}
+              <br />
+              reps clean
             </p>
           </div>
         </div>
-        <div className="bg-paper p-6">
-          <Figure label="Posture" value={postureScoreValue} unit="/100" size="lg" tone={scoreTone(postureScoreValue) === 'good' ? 'ink' : scoreTone(postureScoreValue)}>
-            <Meter value={postureScoreValue} tone={scoreTone(postureScoreValue)} className="mt-4" />
-          </Figure>
+        <div className="card flex flex-col justify-between p-6">
+          <p className="text-sm text-ink-2">Posture</p>
+          <Stat value={postureScoreValue} unit="/100" size="lg" tone={scoreTone(postureScoreValue) === 'good' ? 'ink' : scoreTone(postureScoreValue)}>
+            <Meter value={postureScoreValue} tone={scoreTone(postureScoreValue)} className="mt-5" />
+          </Stat>
         </div>
-        <div className="bg-paper p-6">
-          <Figure label="Injury risk" value={riskScore} unit="%" size="lg" tone={risk.tone}>
-            <RiskScale score={riskScore} className="mt-4" />
-          </Figure>
+        <div className="card flex flex-col justify-between p-6">
+          <div className="flex items-start justify-between">
+            <p className="text-sm text-ink-2">Injury risk</p>
+            <RiskTag score={riskScore} />
+          </div>
+          <Stat value={riskScore} unit="%" size="lg" tone={risk.tone}>
+            <RiskScale score={riskScore} className="mt-5" />
+          </Stat>
         </div>
       </section>
 
-      <dl className="mt-px grid grid-cols-2 border-y border-ink md:grid-cols-4">
+      <dl className="mt-3 grid grid-cols-2 gap-3 md:grid-cols-4">
         {[
-          ['Reps', repCountValue],
-          ['Accuracy', `${report.accuracy ?? '—'}%`],
-          ['Time', formatDuration(report.duration)],
-          ['Avg pressure', Math.round(averageFsrValue || 0)],
-        ].map(([label, value], i) => (
-          <div key={label} className={cx('py-5', i % 2 === 1 && 'border-l border-rule pl-5', i >= 2 && 'border-t border-rule md:border-t-0', i > 0 && 'md:border-l md:pl-6', i === 0 ? 'pr-5' : '')}>
-            <dt className="label">{label}</dt>
-            <dd className="figure mt-2 text-[40px]">{value}</dd>
+          ['Reps', repCountValue, ''],
+          ['Accuracy', report.accuracy ?? '—', '%'],
+          ['Time', formatDuration(report.duration), ''],
+          ['Avg pressure', Math.round(averageFsrValue || 0), ''],
+        ].map(([label, value, unit]) => (
+          <div key={label} className="card p-6">
+            <dt className="text-sm text-ink-2">{label}</dt>
+            <dd className="stat mt-8 text-5xl">
+              {value}
+              {unit ? <span className="ml-0.5 text-lg tracking-normal text-muted">{unit}</span> : null}
+            </dd>
           </div>
         ))}
       </dl>
 
       {/* Coach notes */}
-      <section className="mt-12 grid gap-10 lg:grid-cols-[1.2fr_1fr]" aria-label="Coach notes">
-        <div>
-          <h2 className="label mb-3 text-ink">Coach's note</h2>
-          <p className="border-l-4 border-signal pl-5 text-xl leading-snug font-medium text-pretty">
-            {insights.summary || `You completed ${report.totalReps} reps with ${report.accuracy}% accuracy.`}
-          </p>
-        </div>
-        <div className="grid gap-6 sm:grid-cols-3 lg:grid-cols-1">
-          <NoteList title="Worked" mark="+" tone="text-good" items={insights.positiveFeedback} empty="Keep logging sessions to see highlights." />
-          <NoteList title="Fix next" mark="→" tone="text-signal" items={insights.improvements} empty="No corrections this time." />
-          <NoteList title="Watch" mark="!" tone="text-bad" items={cautions} empty="Nothing flagged." />
+      <section className="card card-pad mt-3" aria-label="Coach notes">
+        <p className="text-sm text-ink-2">Coach's note</p>
+        <p className="lede mt-5 max-w-4xl text-[28px] sm:text-[36px]">
+          {insights.summary || `You completed ${report.totalReps} reps with ${report.accuracy}% accuracy.`}
+        </p>
+        <div className="mt-10 grid gap-8 border-t border-line pt-8 sm:grid-cols-3">
+          <NoteList title="What worked" dot="bg-good" items={insights.positiveFeedback} empty="Keep logging sessions to see highlights." />
+          <NoteList title="Fix next" dot="bg-warn" items={insights.improvements} empty="No corrections this time." />
+          <NoteList title="Watch out" dot="bg-bad" items={cautions} empty="Nothing flagged." />
         </div>
       </section>
 
       {/* Chart */}
-      <section className="mt-12" aria-labelledby="chart-title">
-        <div className="mb-3 flex flex-wrap items-baseline justify-between gap-3 border-b border-ink pb-3">
-          <h2 id="chart-title" className="label text-ink">Rep by rep</h2>
-          <div className="flex flex-wrap gap-5 text-xs font-semibold tracking-[0.04em] uppercase">
+      <section className="card card-pad mt-3" aria-labelledby="chart-title">
+        <div className="mb-6 flex flex-wrap items-baseline justify-between gap-3">
+          <h2 id="chart-title" className="lede text-3xl">Rep by rep</h2>
+          <div className="flex flex-wrap gap-5 text-sm text-ink-2">
             <Legend swatch="h-[3px] bg-ink" label="Form" />
             <Legend swatch="h-[2px] bg-info" label="Pressure" />
             <Legend swatch="h-0 border-t-2 border-dashed border-muted" label="Consistency" />
-            <Legend swatch="size-2 bg-bad" label="Flagged rep" />
+            <Legend swatch="size-2 rounded-full bg-bad" label="Flagged rep" />
           </div>
         </div>
         <RepPerformanceChart reps={reps} />
@@ -176,29 +182,29 @@ export default function ReportPage() {
 
       {/* Table */}
       {reps.length ? (
-        <section className="mt-12" aria-labelledby="reps-title">
-          <h2 id="reps-title" className="label mb-3 text-ink">Rep log</h2>
-          <div className="overflow-x-auto border-t-2 border-ink">
+        <section className="card mt-3 overflow-hidden" aria-labelledby="reps-title">
+          <h2 id="reps-title" className="lede px-6 pt-6 text-3xl sm:px-8 sm:pt-8">Rep log</h2>
+          <div className="mt-4 overflow-x-auto">
             <table className="w-full min-w-[640px] text-sm tabular-nums">
               <thead>
-                <tr className="border-b border-ink text-left">
-                  {['#', 'Form', 'Pressure score', 'Avg pressure', 'Range', 'Consistency', ''].map((h) => (
-                    <th key={h || 'status'} scope="col" className="label py-3 pr-4 font-semibold">{h}</th>
+                <tr className="border-b border-line text-left text-ink-2">
+                  {['Rep', 'Form', 'Pressure score', 'Avg pressure', 'Range', 'Consistency', ''].map((h) => (
+                    <th key={h || 'status'} scope="col" className="px-3 py-3 font-normal first:pl-6 sm:first:pl-8">{h}</th>
                   ))}
                 </tr>
               </thead>
               <tbody>
                 {reps.map((rep) => (
-                  <tr key={rep.repNumber} className="border-b border-rule">
-                    <td className="py-2.5 pr-4 font-semibold">{rep.repNumber}</td>
-                    <td className={cx('py-2.5 pr-4 font-semibold', rep.formScore >= 60 ? 'text-ink' : 'text-bad')}>{rep.formScore}</td>
-                    <td className="py-2.5 pr-4 text-ink-2">{rep.fsrScore ?? '—'}</td>
-                    <td className="py-2.5 pr-4 text-ink-2">{rep.avgFsr ?? '—'}</td>
-                    <td className="py-2.5 pr-4 text-ink-2">
+                  <tr key={rep.repNumber} className="border-b border-line last:border-0">
+                    <td className="px-3 py-3.5 pl-6 sm:pl-8">{rep.repNumber}</td>
+                    <td className={cx('px-3 py-3.5 font-medium', rep.formScore >= 60 ? 'text-ink' : 'text-bad')}>{rep.formScore}</td>
+                    <td className="px-3 py-3.5 text-ink-2">{rep.fsrScore ?? '—'}</td>
+                    <td className="px-3 py-3.5 text-ink-2">{rep.avgFsr ?? '—'}</td>
+                    <td className="px-3 py-3.5 text-ink-2">
                       {rep.minAngle != null && rep.maxAngle != null ? `${Math.round(rep.minAngle)}–${Math.round(rep.maxAngle)}°` : '—'}
                     </td>
-                    <td className="py-2.5 pr-4 text-ink-2">{rep.fusionScore ?? '—'}</td>
-                    <td className="py-2.5 text-right">
+                    <td className="px-3 py-3.5 text-ink-2">{rep.fusionScore ?? '—'}</td>
+                    <td className="px-3 py-3.5 pr-6 text-right sm:pr-8">
                       {rep.correct ? <span className="tag tag-good">Clean</span> : <span className="tag tag-bad">Fix</span>}
                     </td>
                   </tr>
@@ -208,30 +214,25 @@ export default function ReportPage() {
           </div>
         </section>
       ) : null}
-
-      <div className="mt-10 flex justify-between gap-4 border-t border-rule pt-4 text-sm text-ink-2">
-        <RiskTag score={riskScore} showScore />
-        <Link to="/history" className="btn-text">All sessions</Link>
-      </div>
     </div>
   );
 }
 
-function NoteList({ title, mark, tone, items, empty }) {
+function NoteList({ title, dot, items, empty }) {
   return (
     <div>
-      <h3 className="label text-ink">{title}</h3>
+      <h3 className="flex items-center gap-2 text-sm font-medium">
+        <span className={cx('size-2 rounded-full', dot)} aria-hidden />
+        {title}
+      </h3>
       {items?.length ? (
-        <ul className="mt-2 flex flex-col gap-1.5">
+        <ul className="mt-3 flex flex-col gap-2">
           {items.map((item) => (
-            <li key={item} className="flex gap-2.5 text-[15px]">
-              <span className={cx('w-3 shrink-0 font-bold', tone)} aria-hidden>{mark}</span>
-              {item}
-            </li>
+            <li key={item} className="text-[15px] leading-snug text-ink-2">{item}</li>
           ))}
         </ul>
       ) : (
-        <p className="mt-2 text-sm text-muted">{empty}</p>
+        <p className="mt-3 text-sm text-muted">{empty}</p>
       )}
     </div>
   );
@@ -249,7 +250,7 @@ function Legend({ swatch, label }) {
 function RepPerformanceChart({ reps }) {
   if (!reps.length) {
     return (
-      <div className="graph-paper grid h-48 place-items-center text-sm text-ink-2">
+      <div className="grid h-48 place-items-center rounded-[4px] bg-canvas text-sm text-ink-2">
         Not enough reps to plot yet.
       </div>
     );
@@ -271,12 +272,12 @@ function RepPerformanceChart({ reps }) {
     <svg viewBox={`0 0 ${CHART_WIDTH} ${CHART_HEIGHT}`} className="h-auto w-full" role="img" aria-label="Line chart of form, pressure and consistency scores for each rep">
       {[0, 25, 50, 75, 100].map((tick) => (
         <g key={tick}>
-          <line x1={left} x2={CHART_WIDTH - right} y1={yAt(tick)} y2={yAt(tick)} stroke="rgb(18 18 18 / 0.1)" />
-          <text x={left - 8} y={yAt(tick) + 4} fill="var(--color-muted)" fontSize="11" fontWeight="600" textAnchor="end">{tick}</text>
+          <line x1={left} x2={CHART_WIDTH - right} y1={yAt(tick)} y2={yAt(tick)} stroke="rgb(14 16 19 / 0.08)" />
+          <text x={left - 8} y={yAt(tick) + 4} fill="var(--color-muted)" fontSize="11" textAnchor="end">{tick}</text>
         </g>
       ))}
-      <rect x={left} y={yAt(60)} width={usableWidth} height={yAt(0) - yAt(60)} fill="rgb(196 42 28 / 0.04)" />
-      <text x={CHART_WIDTH - right - 4} y={yAt(0) - 8} fill="var(--color-bad)" fontSize="10" fontWeight="700" textAnchor="end" letterSpacing="1">FORM UNDER 60</text>
+      <rect x={left} y={yAt(60)} width={usableWidth} height={yAt(0) - yAt(60)} fill="rgb(198 47 34 / 0.035)" />
+      <text x={CHART_WIDTH - right - 4} y={yAt(0) - 8} fill="var(--color-bad)" fontSize="11" textAnchor="end">Form under 60</text>
 
       <polyline fill="none" stroke="var(--color-muted)" strokeWidth="1.5" strokeDasharray="5 5" points={pointsFor('fusionScore')} />
       <polyline fill="none" stroke="var(--color-info)" strokeWidth="2" points={pointsFor('fsrScore')} />
@@ -285,11 +286,11 @@ function RepPerformanceChart({ reps }) {
       {reps.map((rep, index) => (
         <g key={rep.repNumber}>
           {rep.correct ? (
-            <circle cx={xAt(index)} cy={yAt(rep.formScore ?? 0)} r="4" fill="var(--color-paper)" stroke="var(--color-ink)" strokeWidth="2.5" />
+            <circle cx={xAt(index)} cy={yAt(rep.formScore ?? 0)} r="4" fill="#ffffff" stroke="var(--color-ink)" strokeWidth="2" />
           ) : (
-            <rect x={xAt(index) - 5} y={yAt(rep.formScore ?? 0) - 5} width="10" height="10" fill="var(--color-bad)" />
+            <circle cx={xAt(index)} cy={yAt(rep.formScore ?? 0)} r="5.5" fill="var(--color-bad)" stroke="#ffffff" strokeWidth="2" />
           )}
-          <text x={xAt(index)} y={CHART_HEIGHT - 6} textAnchor="middle" fill="var(--color-muted)" fontSize="11" fontWeight="600">{rep.repNumber}</text>
+          <text x={xAt(index)} y={CHART_HEIGHT - 6} textAnchor="middle" fill="var(--color-muted)" fontSize="11">{rep.repNumber}</text>
         </g>
       ))}
     </svg>

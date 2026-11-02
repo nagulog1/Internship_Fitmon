@@ -115,12 +115,12 @@ export default function WebcamFeed() {
   const phase = PHASE_LABELS[repState] || 'Idle';
 
   return (
-    <div className="relative aspect-[4/3] w-full overflow-hidden bg-ink sm:aspect-video">
+    <div className="relative isolate aspect-[4/3] w-full overflow-hidden rounded-[4px] bg-ink text-white sm:aspect-video">
       <Webcam
         ref={webcamRef}
         audio={false}
         mirrored
-        className="absolute inset-0 size-full object-cover"
+        className="absolute inset-0 -z-20 size-full object-cover"
         onUserMedia={handleUserMedia}
         onUserMediaError={handleUserMediaError}
         videoConstraints={{
@@ -132,49 +132,42 @@ export default function WebcamFeed() {
       />
       <canvas
         ref={canvasRef}
-        className="absolute inset-0 size-full object-cover"
+        className="absolute inset-0 -z-20 size-full object-cover"
         style={{ transform: 'scaleX(-1)' }}
       />
-
-      {/* corner registration marks */}
-      {['top-3 left-3 border-t-2 border-l-2', 'top-3 right-3 border-t-2 border-r-2', 'bottom-3 left-3 border-b-2 border-l-2', 'bottom-3 right-3 border-b-2 border-r-2'].map((pos) => (
-        <span key={pos} className={`pointer-events-none absolute size-5 border-paper/70 ${pos}`} aria-hidden />
-      ))}
+      <div className="photo-scrim absolute inset-0 -z-10" aria-hidden />
 
       {cameraError ? (
-        <div className="absolute inset-0 flex items-center bg-ink/90 p-8">
-          <div className="max-w-sm text-paper">
-            <p className="display text-4xl">Camera unavailable</p>
-            <p className="mt-2 text-sm text-paper/75">{cameraError}</p>
+        <div className="absolute inset-0 flex items-end bg-ink/85 p-6 sm:p-8">
+          <div className="max-w-md">
+            <p className="headline text-5xl">Camera unavailable</p>
+            <p className="mt-4 text-sm text-white/80">{cameraError}</p>
           </div>
         </div>
       ) : null}
 
-      <div className="absolute top-6 left-8 flex items-center gap-2 text-[11px] font-semibold tracking-[0.1em] text-paper uppercase">
+      <div className="absolute inset-x-0 top-0 flex items-center justify-between p-5 text-sm sm:p-6">
+        <span className="text-white/85">{sessionActive ? 'Recording' : 'Live camera'}</span>
         {sessionActive ? (
-          <>
-            <span className="size-2 animate-blink bg-signal" />
-            Rec
-          </>
+          <span className="tag tag-volt">
+            <span className="size-1.5 animate-pulse-soft rounded-full bg-ink" /> Rec
+          </span>
         ) : (
-          'Camera'
+          <span className="text-white/85">Bicep curl</span>
         )}
       </div>
 
-      <div className="absolute right-8 bottom-6 left-8 flex items-end justify-between gap-4">
-        <div className="hidden gap-6 text-paper sm:flex">
-          <div>
-            <p className="text-[10px] font-semibold tracking-[0.1em] text-paper/70 uppercase">Angle</p>
-            <p className="figure text-3xl">{angle}°</p>
-          </div>
-          <div>
-            <p className="text-[10px] font-semibold tracking-[0.1em] text-paper/70 uppercase">Phase</p>
-            <p className="figure text-3xl">{phase}</p>
-          </div>
+      <div className="absolute inset-x-0 bottom-0 flex items-end justify-between gap-6 p-5 sm:p-6">
+        <div>
+          <p className="stat text-[72px] sm:text-[110px]">{repCount}</p>
+          <p className="mt-1 text-sm text-white/85">Reps · {phase}</p>
         </div>
-        <div className="ml-auto bg-signal px-4 pt-2 pb-3 text-ink">
-          <p className="text-[10px] font-semibold tracking-[0.1em] uppercase">Reps</p>
-          <p className="figure text-5xl sm:text-6xl">{repCount}</p>
+        <div className="hidden items-stretch gap-6 sm:flex">
+          <span className="w-px bg-white/40" aria-hidden />
+          <div className="text-center">
+            <p className="stat text-5xl">{angle}°</p>
+            <p className="mt-1 text-sm text-white/85">Elbow angle</p>
+          </div>
         </div>
       </div>
     </div>

@@ -6,7 +6,7 @@ import { firebaseApp } from '../firebase/config';
 import useAuthStore from '../store/useAuthStore';
 import { buildReportPdf, getReportPdfFileName } from '../utils/reportPdf';
 import { EmptyState, Meter, PageHeader, RiskTag } from '../components/ui';
-import { cx, formatDuration, getRisk, getSessionTimestamp, scoreTone } from '../utils/format';
+import { formatDuration, getRisk, getSessionTimestamp, scoreTone } from '../utils/format';
 
 const db = firebaseApp ? getFirestore(firebaseApp) : null;
 const FILTERS = ['All', 'Low Risk', 'Moderate Risk', 'High Risk'];
@@ -66,43 +66,46 @@ export default function History() {
 
   return (
     <div className="animate-rise">
-      <PageHeader label="Training log" title="History" />
+      <PageHeader kicker="Training log" title="History" description="Every session you've finished, with its scores and a PDF report." />
 
       {summary ? (
-        <dl className="mb-10 grid grid-cols-2 border-b border-ink pb-6 md:grid-cols-4">
+        <dl className="mb-3 grid grid-cols-2 gap-3 md:grid-cols-4">
           {[
-            ['Sessions', summary.count],
-            ['Total reps', summary.reps],
-            ['Avg posture', summary.posture],
-            ['Avg risk', `${summary.risk}%`],
-          ].map(([label, value], i) => (
-            <div key={label} className={cx(i > 0 && 'md:border-l md:border-rule md:pl-6', i % 2 === 1 && 'border-l border-rule pl-5', i >= 2 && 'mt-5 md:mt-0')}>
-              <dt className="label">{label}</dt>
-              <dd className="figure mt-2 text-[44px]">{value}</dd>
+            ['Sessions', summary.count, ''],
+            ['Total reps', summary.reps, ''],
+            ['Avg posture', summary.posture, '/100'],
+            ['Avg risk', summary.risk, '%'],
+          ].map(([label, value, unit]) => (
+            <div key={label} className="card p-6">
+              <dt className="text-sm text-ink-2">{label}</dt>
+              <dd className="stat mt-8 text-5xl">
+                {value}
+                {unit ? <span className="ml-0.5 text-lg tracking-normal text-muted">{unit}</span> : null}
+              </dd>
             </div>
           ))}
         </dl>
       ) : null}
 
-      <div className="mb-2 flex gap-6 overflow-x-auto border-b border-rule" aria-label="Filter by risk">
+      <div className="mb-3 flex gap-1 overflow-x-auto rounded-full bg-surface p-1 sm:inline-flex" aria-label="Filter by risk">
         {FILTERS.map((f) => (
-          <button key={f} type="button" aria-pressed={filter === f} onClick={() => setFilter(f)} className="tab">
+          <button key={f} type="button" aria-pressed={filter === f} onClick={() => setFilter(f)} className="seg">
             {f}
           </button>
         ))}
       </div>
 
       {loading ? (
-        <div className="flex flex-col gap-2 pt-4" aria-busy="true" aria-label="Loading sessions">
-          {[0, 1, 2, 3].map((i) => <div key={i} className="skeleton h-14" />)}
+        <div className="flex flex-col gap-3" aria-busy="true" aria-label="Loading sessions">
+          {[0, 1, 2, 3].map((i) => <div key={i} className="skeleton h-20" />)}
         </div>
       ) : filteredSessions.length > 0 ? (
-        <div className="overflow-x-auto">
-          <table className="w-full min-w-[680px] text-sm tabular-nums">
+        <div className="card overflow-x-auto">
+          <table className="w-full min-w-[720px] text-sm tabular-nums">
             <thead>
-              <tr className="border-b border-ink text-left">
+              <tr className="border-b border-line text-left text-ink-2">
                 {['Date', 'Reps', 'Posture', 'Time', 'Risk', ''].map((h) => (
-                  <th key={h || 'actions'} scope="col" className="label py-3 pr-4 font-semibold">{h}</th>
+                  <th key={h || 'actions'} scope="col" className="px-4 py-4 font-normal first:pl-6 last:pr-6">{h}</th>
                 ))}
               </tr>
             </thead>
@@ -112,22 +115,22 @@ export default function History() {
                 const posture = sess.avgPostureScore || 0;
                 const ts = getSessionTimestamp(sess);
                 return (
-                  <tr key={sess.id} className="border-b border-rule hover:bg-sheet">
-                    <td className="py-4 pr-4">
-                      <p className="font-semibold">{ts ? new Date(ts).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' }) : 'Unknown'}</p>
+                  <tr key={sess.id} className="border-b border-line last:border-0 hover:bg-canvas/50">
+                    <td className="px-4 py-5 pl-6">
+                      <p className="font-medium">{ts ? new Date(ts).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' }) : 'Unknown'}</p>
                       <p className="text-xs text-muted">{ts ? new Date(ts).toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' }) : ''}</p>
                     </td>
-                    <td className="figure py-4 pr-4 text-2xl">{repsCount || 0}</td>
-                    <td className="py-4 pr-4">
-                      <div className="flex items-center gap-3">
-                        <span className="figure w-8 text-2xl">{posture}</span>
-                        <Meter value={posture} segments={10} tone={scoreTone(posture)} className="h-2 w-24" />
+                    <td className="stat px-4 py-5 text-3xl">{repsCount || 0}</td>
+                    <td className="px-4 py-5">
+                      <div className="flex items-center gap-4">
+                        <span className="stat w-10 text-3xl">{posture}</span>
+                        <Meter value={posture} tone={scoreTone(posture)} className="w-24" />
                       </div>
                     </td>
-                    <td className="py-4 pr-4 text-ink-2">{formatDuration(sess.duration)}</td>
-                    <td className="py-4 pr-4"><RiskTag score={sess.injuryRiskScore || 0} /></td>
-                    <td className="py-4 text-right">
-                      <button type="button" onClick={() => handleDownload(sess)} className="btn-text">
+                    <td className="px-4 py-5 text-ink-2">{formatDuration(sess.duration)}</td>
+                    <td className="px-4 py-5"><RiskTag score={sess.injuryRiskScore || 0} /></td>
+                    <td className="px-4 py-5 pr-6 text-right">
+                      <button type="button" onClick={() => handleDownload(sess)} className="btn btn-sm btn-outline">
                         <ArrowDownToLine className="size-3.5" /> PDF
                       </button>
                     </td>
@@ -139,14 +142,13 @@ export default function History() {
         </div>
       ) : (
         <EmptyState
-          className="mt-6"
-          title={sessions.length ? 'Nothing at this risk level' : 'Your log is empty'}
-          description={sessions.length ? 'Try another filter.' : 'Finish a session and it shows up here with its scores and a PDF report.'}
+          title={sessions.length ? 'Nothing here' : 'Your log is empty'}
+          description={sessions.length ? 'No sessions at this risk level. Try another filter.' : 'Finish a session and it shows up here with its scores and a PDF report.'}
           action={
             sessions.length ? (
-              <button type="button" className="btn btn-line" onClick={() => setFilter('All')}>Show all</button>
+              <button type="button" className="btn btn-outline" onClick={() => setFilter('All')}>Show all</button>
             ) : (
-              <Link to="/session" className="btn btn-ink">Start a session</Link>
+              <Link to="/session" className="btn btn-volt-flat">Start a session</Link>
             )
           }
         />

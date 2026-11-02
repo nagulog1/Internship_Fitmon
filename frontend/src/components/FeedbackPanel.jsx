@@ -143,7 +143,6 @@ export default function FeedbackPanel() {
   };
 
   const engagement = getEngagementLabel(displayedForm);
-  const repsUpdating = displayedReps !== repCount;
   const postureUpdating = displayedPosture !== postureScore;
   const pressureUpdating = displayedPressure !== averageFsr;
   const formUpdating = displayedForm !== engagementStatus;
@@ -151,59 +150,64 @@ export default function FeedbackPanel() {
   const postureTone = sessionActive ? scoreTone(displayedPosture) : 'ink';
 
   return (
-    <div className="flex flex-col border-t-2 border-ink">
-      {/* Reps */}
-      <div className="flex items-end justify-between gap-4 border-b border-rule py-5">
-        <div>
-          <p className="label">Reps</p>
-          <p className={cx('figure mt-1 text-[96px] text-signal transition-opacity', repsUpdating && 'opacity-60')}>{displayedReps}</p>
+    <div className="flex flex-col gap-3">
+      <div className="card p-6">
+        <div className="flex items-start justify-between gap-4">
+          <p className="text-sm text-ink-2">Posture</p>
+          <span className="flex items-center gap-2 text-sm">
+            {sessionActive ? <span className="size-1.5 animate-pulse-soft rounded-full bg-good" /> : null}
+            {getRepStateLabel()}
+          </span>
         </div>
-        <p className="pb-3 text-right text-sm font-semibold tracking-[0.04em] uppercase">
-          {sessionActive ? <span className="mr-2 inline-block size-2 animate-blink bg-signal align-middle" /> : null}
-          {getRepStateLabel()}
+        <p className={cx('stat mt-8 text-[80px] transition-opacity', toneClass[postureTone], postureUpdating && 'opacity-60')}>
+          {displayedPosture}
+          <span className="ml-1 text-xl tracking-normal text-muted">/100</span>
         </p>
+        <Meter value={displayedPosture} tone={postureTone} className="mt-5" />
+        <p className="sr-only" aria-live="polite">{displayedReps} reps</p>
       </div>
 
-      {/* Posture */}
-      <Row label="Posture" value={displayedPosture} unit="/100" tone={postureTone} dim={postureUpdating}>
-        <Meter value={displayedPosture} tone={postureTone === 'ink' ? 'ink' : postureTone} className="mt-3" />
-      </Row>
-
-      {/* Elbow angle */}
-      <Row label="Elbow angle" value={`${angle}°`}>
-        <div className="relative mt-3 h-2.5 bg-ink/10">
-          <span className="absolute inset-y-0 left-0 bg-ink transition-[width] duration-150" style={{ width: `${anglePct}%` }} />
+      <div className="card p-6">
+        <div className="flex items-baseline justify-between">
+          <p className="text-sm text-ink-2">Elbow angle</p>
+          <p className="stat text-3xl">{angle}°</p>
         </div>
-        <div className="mt-1.5 flex justify-between text-[10px] font-semibold tracking-[0.08em] text-muted uppercase">
-          <span>Flexed 0°</span>
-          <span>180° Extended</span>
+        <div className="relative mt-5 h-1 rounded-full bg-ink/10">
+          <span
+            className="absolute top-1/2 size-3.5 -translate-x-1/2 -translate-y-1/2 rounded-full border-2 border-white bg-ink shadow transition-[left] duration-150"
+            style={{ left: `${anglePct}%` }}
+          />
         </div>
-      </Row>
-
-      <div className="grid grid-cols-2">
-        <Row label="Stability" value={elbowStability} unit="%" tone={scoreTone(elbowStability)} compact className="pr-5" />
-        <Row label="Smoothness" value={smoothness} tone={scoreTone(smoothness)} compact className="border-l pl-5" />
-        <Row label="Pressure" value={Math.round(displayedPressure || 0)} tone="info" compact dim={pressureUpdating} className="pr-5" />
-        <div className="border-b border-l border-rule py-4 pl-5">
-          <p className="label">Form</p>
-          <span className={cx('tag mt-3 text-xs transition-opacity', engagement.tagClass, formUpdating && 'opacity-60')}>{engagement.text}</span>
+        <div className="mt-3 flex justify-between text-xs text-muted">
+          <span>0° flexed</span>
+          <span>180° extended</span>
         </div>
       </div>
 
-      {/* Cues */}
-      <div className="py-5">
-        <p className="label">Coaching cues</p>
+      <div className="grid grid-cols-2 gap-3">
+        <Tile label="Stability" value={elbowStability} unit="%" tone={scoreTone(elbowStability)} />
+        <Tile label="Smoothness" value={smoothness} tone={scoreTone(smoothness)} />
+        <Tile label="Pressure" value={Math.round(displayedPressure || 0)} tone="info" dim={pressureUpdating} />
+        <div className="card flex flex-col justify-between gap-6 p-5">
+          <p className="text-sm text-ink-2">Form</p>
+          <span className={cx('tag self-start transition-opacity', engagement.tagClass, formUpdating && 'opacity-60')}>{engagement.text}</span>
+        </div>
+      </div>
+
+      <div className="card p-6">
+        <p className="text-sm text-ink-2">Coaching cues</p>
         {delayedMessages.length > 0 ? (
-          <ol className="mt-3 flex flex-col gap-2" aria-live="polite">
+          <ol className="mt-4 flex flex-col gap-2" aria-live="polite">
             {delayedMessages.map((msg) => (
-              <li key={msg.id} className="animate-rise border-l-4 border-signal bg-sheet px-3 py-2.5 text-[15px] font-medium">
+              <li key={msg.id} className="flex animate-rise items-start gap-3 text-[15px]">
+                <span className="mt-2 size-1.5 shrink-0 rounded-full bg-warn" aria-hidden />
                 {msg.text}
               </li>
             ))}
           </ol>
         ) : (
-          <p className="mt-3 text-sm text-ink-2">
-            {sessionActive ? 'Nothing to fix yet. Cues show up here if your form drifts.' : 'Cues show up here once you start.'}
+          <p className="lede mt-4 text-xl text-ink-2">
+            {sessionActive ? 'Looking clean. Cues show up here if your form drifts.' : 'Cues show up here once you start.'}
           </p>
         )}
       </div>
@@ -213,17 +217,14 @@ export default function FeedbackPanel() {
 
 const toneClass = { good: 'text-good', warn: 'text-warn', bad: 'text-bad', info: 'text-info', ink: 'text-ink' };
 
-function Row({ label, value, unit, tone = 'ink', dim, compact, className = '', children }) {
+function Tile({ label, value, unit, tone = 'ink', dim }) {
   return (
-    <div className={cx('border-b border-rule', compact ? 'py-4' : 'py-5', className)}>
-      <div className="flex items-baseline justify-between gap-3">
-        <p className="label">{label}</p>
-        <p className={cx('figure transition-opacity', compact ? 'text-[32px]' : 'text-[40px]', toneClass[tone], dim && 'opacity-60')}>
-          {value}
-          {unit ? <span className="ml-0.5 text-[0.45em] text-muted">{unit}</span> : null}
-        </p>
-      </div>
-      {children}
+    <div className="card flex flex-col justify-between gap-6 p-5">
+      <p className="text-sm text-ink-2">{label}</p>
+      <p className={cx('stat text-4xl transition-opacity', toneClass[tone], dim && 'opacity-60')}>
+        {value}
+        {unit ? <span className="ml-0.5 text-base tracking-normal text-muted">{unit}</span> : null}
+      </p>
     </div>
   );
 }

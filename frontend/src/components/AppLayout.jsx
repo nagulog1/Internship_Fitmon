@@ -1,7 +1,7 @@
 import { signOut } from 'firebase/auth';
 import { createElement } from 'react';
-import { Clock, Dumbbell, House, MessagesSquare, ScanLine, UserRound } from 'lucide-react';
-import { NavLink, Outlet, useNavigate } from 'react-router-dom';
+import { Clock, Dumbbell, House, LogOut, MessagesSquare, ScanLine, UserRound } from 'lucide-react';
+import { Link, NavLink, Outlet, useLocation, useNavigate } from 'react-router-dom';
 import { auth } from '../firebase/config';
 import useAuthStore from '../store/useAuthStore';
 import useSessionStore from '../stores/useSessionStore';
@@ -18,12 +18,19 @@ const TRAINEE_LINKS = [
 
 const MENTOR_LINKS = [{ label: 'Coach studio', to: '/mentor', icon: MessagesSquare }];
 
+function initialsOf(name) {
+  if (!name) return 'FM';
+  return name.split(' ').map((part) => part[0]).join('').slice(0, 2).toUpperCase();
+}
+
 export default function AppLayout() {
   const navigate = useNavigate();
+  const { pathname } = useLocation();
   const user = useAuthStore((state) => state.user);
   const sessionActive = useSessionStore((state) => state.sessionActive);
-  const links = user?.role === 'mentor' ? MENTOR_LINKS : TRAINEE_LINKS;
-  const home = user?.role === 'mentor' ? '/mentor' : '/dashboard';
+  const isMentor = user?.role === 'mentor';
+  const links = isMentor ? MENTOR_LINKS : TRAINEE_LINKS;
+  const home = isMentor ? '/mentor' : '/dashboard';
 
   async function handleLogout() {
     if (auth) await signOut(auth);
@@ -31,66 +38,58 @@ export default function AppLayout() {
   }
 
   return (
-    <div className="min-h-screen bg-paper">
-      <header className="sticky top-0 z-30 border-b border-ink bg-paper/95 backdrop-blur-sm">
-        <div className="mx-auto flex h-16 max-w-7xl items-center gap-8 px-4 sm:px-6 lg:px-8">
+    <div className="min-h-screen bg-canvas">
+      <header className="sticky top-0 z-30 bg-canvas/85 backdrop-blur-md">
+        <div className="mx-auto flex h-20 max-w-[1320px] items-center gap-6 px-5 sm:px-8">
           <Logo to={home} />
 
-          <nav className="hidden h-full items-stretch gap-6 md:flex" aria-label="Main">
+          <nav className="mx-auto hidden items-center gap-1 rounded-full bg-surface p-1 md:flex" aria-label="Main">
             {links.map((link) => (
               <NavLink
                 key={link.to}
                 to={link.to}
                 className={({ isActive }) =>
-                  cx(
-                    '-mb-px flex items-center gap-2 border-b-[3px] text-[13px] font-semibold tracking-[0.04em] uppercase transition-colors',
-                    isActive ? 'border-signal text-ink' : 'border-transparent text-muted hover:text-ink'
-                  )
+                  cx('flex h-9 items-center gap-2 rounded-full px-4 text-[13px] transition-colors', isActive ? 'bg-ink text-white' : 'text-ink-2 hover:text-ink')
                 }
               >
                 {link.label}
-                {link.to === '/session' && sessionActive ? <span className="size-1.5 animate-blink bg-signal" aria-label="live" /> : null}
+                {link.to === '/session' && sessionActive ? <span className="size-1.5 animate-pulse-soft rounded-full bg-volt" aria-label="live" /> : null}
               </NavLink>
             ))}
           </nav>
 
-          <div className="ml-auto flex items-center gap-4">
-            {sessionActive ? (
-              <span className="tag border-signal bg-signal text-ink">
-                <span className="size-1.5 animate-blink bg-ink" /> Recording
-              </span>
+          <div className="ml-auto flex items-center gap-3 md:ml-0">
+            {!isMentor && pathname !== '/session' ? (
+              <Link to="/session" className="btn btn-sm btn-volt-flat hidden sm:inline-flex">
+                {sessionActive ? 'Back to session' : 'Start session'}
+              </Link>
             ) : null}
-            <span className="hidden text-sm text-ink-2 lg:inline">{user?.name}</span>
-            <button type="button" onClick={handleLogout} className="btn-text">
-              Log out
+            <span className="hidden size-10 place-items-center rounded-full bg-surface text-xs font-medium lg:grid" title={user?.name}>
+              {initialsOf(user?.name)}
+            </span>
+            <button type="button" onClick={handleLogout} className="grid size-10 place-items-center rounded-full bg-surface text-ink-2 hover:text-ink" aria-label="Log out" title="Log out">
+              <LogOut className="size-4" />
             </button>
           </div>
         </div>
       </header>
 
-      <main className="mx-auto w-full max-w-7xl px-4 pt-8 pb-28 sm:px-6 md:pb-20 lg:px-8 lg:pt-12">
+      <main className="mx-auto w-full max-w-[1320px] px-5 pt-6 pb-28 sm:px-8 md:pb-20 lg:pt-12">
         <Outlet />
       </main>
 
       {links.length > 1 ? (
-        <nav
-          aria-label="Main"
-          className="fixed inset-x-0 bottom-0 z-30 border-t border-ink bg-paper md:hidden"
-          style={{ paddingBottom: 'env(safe-area-inset-bottom)' }}
-        >
+        <nav aria-label="Main" className="fixed inset-x-3 bottom-3 z-30 rounded-full bg-ink p-1.5 shadow-xl md:hidden" style={{ marginBottom: 'env(safe-area-inset-bottom)' }}>
           <div className="grid grid-cols-5">
             {links.map((link) => (
               <NavLink
                 key={link.to}
                 to={link.to}
                 className={({ isActive }) =>
-                  cx(
-                    'flex h-16 flex-col items-center justify-center gap-1 border-t-[3px] text-[10px] font-semibold tracking-[0.06em] uppercase',
-                    isActive ? 'border-signal text-ink' : 'border-transparent text-muted'
-                  )
+                  cx('flex h-12 flex-col items-center justify-center gap-0.5 rounded-full text-[10px] transition-colors', isActive ? 'bg-volt text-ink' : 'text-white/65')
                 }
               >
-                {createElement(link.icon, { className: 'size-5', strokeWidth: 1.75, 'aria-hidden': true })}
+                {createElement(link.icon, { className: 'size-[18px]', strokeWidth: 1.75, 'aria-hidden': true })}
                 {link.label}
               </NavLink>
             ))}

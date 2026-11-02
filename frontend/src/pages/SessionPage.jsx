@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { Loader2 } from 'lucide-react';
 import FeedbackPanel from '../components/FeedbackPanel';
 import WebcamFeed from '../components/WebcamFeed';
-import { Notice } from '../components/ui';
+import { Notice, PageHeader } from '../components/ui';
 import socketService from '../services/socketService';
 import useAuthStore from '../store/useAuthStore';
 import useSessionStore from '../stores/useSessionStore';
@@ -47,29 +47,27 @@ export default function SessionPage() {
   const isReady = poseReady && isConnected;
 
   const status = sessionActive
-    ? { text: 'Recording', note: 'End the session when your set is done.', dot: 'bg-signal animate-blink' }
+    ? { text: 'Recording', note: 'End the session when your set is done.', dot: 'bg-good animate-pulse-soft' }
     : isReady
       ? { text: 'Ready', note: 'Camera and tracker are running.', dot: 'bg-good' }
       : !poseReady
-        ? { text: 'Loading tracker', note: 'Downloading the pose model. A few seconds.', dot: 'bg-warn animate-blink' }
-        : { text: 'Connecting', note: 'Reaching the session server.', dot: 'bg-warn animate-blink' };
+        ? { text: 'Loading tracker', note: 'Downloading the pose model. A few seconds.', dot: 'bg-warn animate-pulse-soft' }
+        : { text: 'Connecting', note: 'Reaching the session server.', dot: 'bg-warn animate-pulse-soft' };
 
   return (
     <div className="animate-rise">
-      <header className="mb-6 flex flex-col gap-4 border-b-2 border-ink pb-5 md:flex-row md:items-end md:justify-between">
-        <div>
-          <p className="label mb-3">Bicep curl</p>
-          <h1 className="display text-[44px] sm:text-[60px]">{sessionActive ? 'Keep going.' : 'Session'}</h1>
-        </div>
-        <p className="max-w-sm text-[15px] text-ink-2 md:text-right">
-          {sessionActive
+      <PageHeader
+        kicker="Bicep curl"
+        title={sessionActive ? 'Keep going' : 'Session'}
+        description={
+          sessionActive
             ? 'Elbow pinned, full range, steady tempo. FitMon is scoring every rep.'
-            : 'Stand side-on with your working arm fully in frame, then press start.'}
-        </p>
-      </header>
+            : 'Stand side-on with your working arm fully in frame, then press start.'
+        }
+      />
 
-      <div className="grid gap-6 xl:grid-cols-[minmax(0,1fr)_380px]">
-        <div className="flex min-w-0 flex-col gap-4">
+      <div className="grid gap-3 xl:grid-cols-[minmax(0,1fr)_380px]">
+        <div className="flex min-w-0 flex-col gap-3">
           <WebcamFeed />
 
           {socketError ? (
@@ -78,33 +76,28 @@ export default function SessionPage() {
             </Notice>
           ) : null}
 
-          <div className="flex flex-col gap-4 border-y border-ink py-4 sm:flex-row sm:items-center sm:justify-between">
+          <div className="card flex flex-col gap-5 p-5 sm:flex-row sm:items-center sm:justify-between sm:p-6">
             <div className="flex items-center gap-3">
-              <span className={cx('size-2.5', status.dot)} aria-hidden />
+              <span className={cx('size-2.5 rounded-full', status.dot)} aria-hidden />
               <div>
-                <p className="text-sm font-semibold tracking-[0.04em] uppercase" role="status" aria-live="polite">
-                  {status.text}
-                </p>
+                <p className="font-medium" role="status" aria-live="polite">{status.text}</p>
                 <p className="text-sm text-ink-2">{status.note}</p>
               </div>
             </div>
 
             {!sessionActive ? (
-              <button type="button" onClick={handleStart} disabled={!poseReady || !token} className="btn btn-signal btn-lg sm:min-w-52">
+              <button type="button" onClick={handleStart} disabled={!poseReady || !token} className="btn btn-lg btn-volt-flat sm:min-w-52">
                 Start session
               </button>
             ) : (
-              <button type="button" onClick={handleEnd} disabled={isGeneratingReport} className="btn btn-ink btn-lg sm:min-w-52">
+              <button type="button" onClick={handleEnd} disabled={isGeneratingReport} className="btn btn-lg btn-dark sm:min-w-52">
                 {isGeneratingReport ? (
                   <>
                     <Loader2 className="size-4 animate-spin" />
                     Writing report…
                   </>
                 ) : (
-                  <>
-                    <span className="size-2.5 bg-current" aria-hidden />
-                    End session
-                  </>
+                  'End session'
                 )}
               </button>
             )}

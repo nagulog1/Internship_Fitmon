@@ -64,16 +64,33 @@ Round 2 keeps the structure and logic but gives the product its own voice, drawn
 | SaaS sidebar | Masthead with text navigation and an orange underline for the active page. Bottom tab bar on mobile |
 | Generic marketing copy | Plain, specific copy ("tells you what to fix before it turns into a sore elbow") |
 
+## Round 3: matching the Dribbble reference
+
+The client supplied a reference: Halo Lab's *"Landing Page for Wearable Technology ✦ Skip"* on Dribbble. The whole site now follows its visual language, keeping all FitMon content:
+
+| Reference element | How FitMon uses it |
+|---|---|
+| Full-bleed outdoor photo with white overlay type | Landing hero, dashboard banner, login panel, the "Band" section, the live camera and workout cards all use photo + `photo-scrim` + white type |
+| Huge, light, tight upper-case headline ("MEET NEW MO/GO") | `.headline` in Inter Tight 450 with -0.05em tracking: "EVERY REP ON THE REC/ORD", page titles |
+| Neon pill CTA with a detached white ring | `.btn-volt` (volt `#def52b` + 1.5px white outline, 3px offset). `.btn-volt-flat` on light surfaces |
+| Small sentence-case corner labels ("Built to climb", "Collaboration") | `.kicker`: "Built for the gym floor", "Works with · Any webcam · FSR band" |
+| White product card with ↗ arrow ("Power in motion") | `card` + `CornerArrow`: "Form in motion" with the curl diagram; "Last session" card on the dashboard |
+| Big light sentence + "LEARN MORE" in volt | `.lede` + `.link-volt` |
+| Light "+40% / Uphill support" stat behind a hairline divider | `.stat` + `Stat` component, used for every number in the app |
+
+**Photography:** only one photo exists in the repo (`public/landing/fitness-band.png`, 635px). `hero.jpg` and `band-closeup.jpg` are sharpened upscales of it. Swap in higher-resolution brand photography when available; the layouts don't need to change. The source photo appears to be a third-party product shot, so confirm usage rights before launch.
+
 ## Design system (current)
 
 | Token | Value | Use |
 |---|---|---|
-| `paper` / `paper-2` / `sheet` | `#f2f0ea` / `#e8e5dc` / `#fbfaf7` | Page, fills, raised surfaces |
-| `ink` / `ink-2` / `muted` | `#121212` / `#45423c` / `#6b675f` | Text and rules (muted is about 4.7:1 on paper) |
-| `signal` | `#ff4d00` | Primary action, reps, "recording", emphasis. Text on it is always ink (6:1) |
-| `good` / `warn` / `bad` | `#12723a` / `#8f5200` / `#c42a1c` | Score and risk states, dark enough to read on paper |
-| `info` | `#1d5bc4` | Pressure / sensor data |
+| `canvas` / `surface` | `#eceeed` / `#ffffff` | App background / cards |
+| `ink` / `ink-2` / `muted` | `#0e1013` / `#464c52` / `#62686f` | Text |
+| `volt` | `#def52b` | CTAs, accents on dark or photo backgrounds only. Text on volt is always ink |
+| `good` / `warn` / `bad` / `info` | `#1a7f45` / `#a15c00` / `#c62f22` / `#2364c8` | Score, risk and pressure states |
 
-- **Classes** (`src/index.css`): `display`, `figure`, `label`, `btn` (`-ink`, `-signal`, `-line`, `-bad`, `-text`), `tag-*`, `field`, `tab`, `sheet`, `skeleton`, `graph-paper`.
-- **Components** (`src/components/ui.jsx`): `Logo`, `PageHeader`, `Figure`, `Meter`, `RiskScale`, `RiskTag`, `EmptyState`, `Notice`, `CurlDiagram`.
+- **Type:** Inter Tight 300–700. Classes: `headline`, `lede`, `stat`, `kicker`.
+- **Controls:** `btn` (`-volt`, `-volt-flat`, `-dark`, `-outline`, `-glass`, `-bad`), `link`, `link-volt`, `seg` (pill filters), `field` (underline inputs), `tag-*`.
+- **Surfaces:** `card`, `card-pad`, `photo-scrim`, `skeleton`.
+- **Components** (`src/components/ui.jsx`): `Logo` (FIT/MON), `PageHeader`, `Stat`, `Meter`, `RiskScale`, `RiskTag`, `EmptyState`, `Notice`, `CornerArrow`, `CurlDiagram`.
 - **Helpers** (`src/utils/format.js`): `cx`, `scoreTone`, `getRisk`, `getSessionTimestamp`, `formatDuration`.

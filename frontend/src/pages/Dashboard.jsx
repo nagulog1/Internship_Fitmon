@@ -1,9 +1,8 @@
-import { ArrowRight, ArrowUpRight } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import useAuthStore from '../store/useAuthStore';
 import useSessionStore from '../stores/useSessionStore';
-import { EmptyState, Figure, Meter, PageHeader, RiskScale } from '../components/ui';
-import { cx, getRisk, scoreTone } from '../utils/format';
+import { CornerArrow, Meter, RiskScale, Stat } from '../components/ui';
+import { getRisk, scoreTone } from '../utils/format';
 
 const ENGAGEMENT = {
   good: 'Strong',
@@ -15,9 +14,16 @@ const ENGAGEMENT = {
 };
 
 const shortcuts = [
-  { to: '/history', title: 'History', copy: 'Every session, scored. Download PDFs.' },
+  { to: '/history', title: 'History', copy: 'Every session, scored, with PDF reports.' },
   { to: '/workout', title: 'Workouts', copy: 'Technique videos by muscle group.' },
   { to: '/profile', title: 'Profile', copy: 'Your goal, streak and accuracy.' },
+];
+
+const steps = [
+  ['Set up', 'Stand side-on, working arm fully in frame.'],
+  ['Curl', 'Cues appear if your elbow drifts.'],
+  ['Stop', 'End the session and get your report.'],
+  ['Compare', 'Check History to see the trend.'],
 ];
 
 export default function Dashboard() {
@@ -44,106 +50,108 @@ export default function Dashboard() {
 
   return (
     <div className="animate-rise">
-      <PageHeader
-        label={new Date().toLocaleDateString('en-GB', { weekday: 'long', day: 'numeric', month: 'long' })}
-        title={`${greeting}, ${firstName}.`}
-        actions={
-          <Link to="/session" className="btn btn-signal btn-lg">
-            {sessionActive ? 'Back to session' : 'Start a session'}
-            <ArrowRight className="size-4" />
-          </Link>
-        }
-      />
-
-      {sessionActive ? (
-        <Link to="/session" className="mb-8 flex items-center gap-3 bg-ink px-5 py-3.5 text-paper hover:bg-ink/90">
-          <span className="size-2 animate-blink bg-signal" aria-hidden />
-          <span className="text-sm font-semibold tracking-[0.04em] uppercase">Session recording</span>
-          <span className="hidden text-sm text-paper/70 sm:inline">Numbers below are live.</span>
-          <ArrowUpRight className="ml-auto size-4" />
-        </Link>
-      ) : null}
-
-      {/* Scoreboard */}
-      <section aria-labelledby="scoreboard-title">
-        <div className="mb-4 flex items-baseline justify-between gap-4">
-          <h2 id="scoreboard-title" className="label text-ink">
-            {sessionActive ? 'Live session' : 'Last session'}
-          </h2>
-          {lastCompletedReport && !sessionActive ? (
-            <Link to="/report/latest" state={{ report: lastCompletedReport }} className="btn-text">
-              Full report <ArrowUpRight className="size-3.5" />
-            </Link>
-          ) : null}
-        </div>
-
-        {hasData ? (
-          <div className="grid grid-cols-2 border-y border-ink lg:grid-cols-4">
-            <Cell index={0}>
-              <Figure label="Posture" value={posture} unit="/100" size="lg" tone={scoreTone(posture) === 'good' ? 'ink' : scoreTone(posture)}>
-                <Meter value={posture} tone={scoreTone(posture)} className="mt-4" />
-              </Figure>
-            </Cell>
-            <Cell index={1}>
-              <Figure label="Reps" value={reps} size="lg" tone="signal">
-                <p className="mt-4 text-sm text-ink-2">Bicep curl</p>
-              </Figure>
-            </Cell>
-            <Cell index={2}>
-              <Figure label="Pressure" value={pressure} size="lg" tone="info">
-                <p className="mt-4 text-sm text-ink-2">Avg FSR reading</p>
-              </Figure>
-            </Cell>
-            <Cell index={3}>
-              {sessionActive ? (
-                <Figure label="Form" value={ENGAGEMENT[engagementStatus] || 'Normal'} size="md" className="pt-4" />
-              ) : (
-                <Figure label="Injury risk" value={riskScore} unit="%" size="lg" tone={risk.tone}>
-                  <RiskScale score={riskScore} className="mt-4" />
-                </Figure>
-              )}
-            </Cell>
+      {/* Photo banner */}
+      <section className="relative isolate overflow-hidden rounded-[4px] bg-ink text-white">
+        <img src="/landing/hero.jpg" alt="" className="absolute inset-0 -z-20 size-full object-cover object-[60%_38%]" />
+        <div className="photo-scrim absolute inset-0 -z-10" aria-hidden />
+        <div className="grid min-h-[420px] gap-8 p-6 sm:p-10 lg:grid-cols-[1fr_260px]">
+          <div className="flex flex-col justify-between gap-10">
+            <p className="text-sm text-white/80">
+              {new Date().toLocaleDateString('en-GB', { weekday: 'long', day: 'numeric', month: 'long' })}
+            </p>
+            <div>
+              <h1 className="headline text-[56px] sm:text-[96px]">
+                {greeting},
+                <br />
+                {firstName}
+              </h1>
+              <Link to="/session" className="btn btn-volt mt-8">
+                {sessionActive ? 'Back to your session' : 'Start a session'}
+              </Link>
+            </div>
           </div>
-        ) : (
-          <EmptyState
-            title="No sessions yet"
-            description="Your first session takes about two minutes. Stand side-on to the camera and curl. FitMon does the counting."
-            action={<Link to="/session" className="btn btn-ink">Start your first session</Link>}
-          />
-        )}
+
+          <div className="flex flex-col justify-end">
+            {hasData ? (
+              <Link to={sessionActive ? '/session' : '/report/latest'} state={sessionActive ? undefined : { report: lastCompletedReport }} className="group card block p-5 text-ink">
+                <div className="flex items-start justify-between">
+                  <p className="text-[15px] font-medium">{sessionActive ? 'Live now' : 'Last session'}</p>
+                  <CornerArrow className="transition-transform group-hover:translate-x-0.5 group-hover:-translate-y-0.5" />
+                </div>
+                <p className="stat mt-8 text-7xl">{posture}</p>
+                <p className="mt-2 text-sm text-ink-2">Posture score</p>
+                <Meter value={posture} tone={scoreTone(posture)} className="mt-4" />
+              </Link>
+            ) : (
+              <div className="card p-5 text-ink">
+                <p className="text-[15px] font-medium">No sessions yet</p>
+                <p className="mt-2 text-sm text-ink-2">Your first one takes about two minutes.</p>
+              </div>
+            )}
+          </div>
+        </div>
       </section>
 
-      <div className="mt-14 grid gap-12 lg:grid-cols-[1fr_1.4fr]">
-        {/* Shortcuts */}
-        <section aria-labelledby="shortcuts-title">
-          <h2 id="shortcuts-title" className="label mb-3 text-ink">Go to</h2>
-          <ul className="border-t border-ink">
+      {sessionActive ? (
+        <p className="mt-4 flex items-center gap-2 text-sm text-ink-2">
+          <span className="size-2 animate-pulse-soft rounded-full bg-good" /> Session recording. The numbers below are live.
+        </p>
+      ) : null}
+
+      {/* Stats */}
+      {hasData ? (
+        <section className="mt-3 grid grid-cols-2 gap-3 lg:grid-cols-4" aria-label={sessionActive ? 'Live session' : 'Last session'}>
+          <div className="card p-6">
+            <p className="text-sm text-ink-2">Reps</p>
+            <Stat value={reps} size="md" className="mt-10" />
+          </div>
+          <div className="card p-6">
+            <p className="text-sm text-ink-2">Pressure</p>
+            <Stat value={pressure} size="md" tone="info" className="mt-10" caption="Avg FSR reading" />
+          </div>
+          <div className="card p-6">
+            <p className="text-sm text-ink-2">{sessionActive ? 'Form' : 'Accuracy'}</p>
+            {sessionActive ? (
+              <Stat value={ENGAGEMENT[engagementStatus] || 'Normal'} size="sm" className="mt-10" />
+            ) : (
+              <Stat value={lastCompletedReport?.accuracy ?? '—'} unit={lastCompletedReport?.accuracy != null ? '%' : undefined} size="md" className="mt-10" />
+            )}
+          </div>
+          <div className="card p-6">
+            <p className="text-sm text-ink-2">Injury risk</p>
+            <Stat value={riskScore} unit="%" size="md" tone={risk.tone} className="mt-10">
+              <RiskScale score={riskScore} className="mt-4" />
+            </Stat>
+          </div>
+        </section>
+      ) : null}
+
+      <div className="mt-16 grid gap-12 lg:grid-cols-2">
+        <section aria-labelledby="go-title">
+          <h2 id="go-title" className="kicker mb-5">Go to</h2>
+          <ul className="flex flex-col gap-3">
             {shortcuts.map((item) => (
-              <li key={item.to} className="border-b border-rule">
-                <Link to={item.to} className="group flex items-center gap-4 py-4">
-                  <span className="display w-32 text-2xl transition-colors group-hover:text-signal">{item.title}</span>
-                  <span className="flex-1 text-sm text-ink-2">{item.copy}</span>
-                  <ArrowRight className="size-4 transition-transform group-hover:translate-x-1" />
+              <li key={item.to}>
+                <Link to={item.to} className="group card flex items-center justify-between gap-6 p-6 transition-shadow hover:shadow-lg hover:shadow-ink/5">
+                  <div>
+                    <p className="lede text-3xl">{item.title}</p>
+                    <p className="mt-1.5 text-sm text-ink-2">{item.copy}</p>
+                  </div>
+                  <CornerArrow className="size-4 transition-transform group-hover:translate-x-0.5 group-hover:-translate-y-0.5" />
                 </Link>
               </li>
             ))}
           </ul>
         </section>
 
-        {/* How it works */}
         <section aria-labelledby="how-title">
-          <h2 id="how-title" className="label mb-3 text-ink">How a session works</h2>
-          <ol className="grid border-t border-ink sm:grid-cols-2">
-            {[
-              ['Set up', 'Stand side-on, working arm fully in frame. Good light helps.'],
-              ['Curl', 'Move at your own pace. Cues appear if your elbow drifts.'],
-              ['Stop', 'End the session and FitMon writes your report.'],
-              ['Compare', 'Check History to see if your form is trending up.'],
-            ].map(([title, text], index) => (
-              <li key={title} className="flex gap-4 border-b border-rule py-4 sm:odd:pr-6 sm:even:border-l sm:even:pl-6">
-                <span className="figure text-3xl text-signal">{index + 1}</span>
+          <h2 id="how-title" className="kicker mb-5">How a session works</h2>
+          <ol className="grid grid-cols-2 gap-3">
+            {steps.map(([title, text], i) => (
+              <li key={title} className="card flex min-h-[170px] flex-col justify-between p-6">
+                <span className="stat text-5xl text-ink/15">0{i + 1}</span>
                 <div>
-                  <p className="font-semibold">{title}</p>
+                  <p className="font-medium">{title}</p>
                   <p className="mt-1 text-sm text-ink-2">{text}</p>
                 </div>
               </li>
@@ -151,22 +159,6 @@ export default function Dashboard() {
           </ol>
         </section>
       </div>
-    </div>
-  );
-}
-
-function Cell({ index, children }) {
-  return (
-    <div
-      className={cx(
-        'border-rule py-6',
-        index % 2 === 1 ? 'border-l pl-5' : 'pr-5',
-        index >= 2 && 'border-t lg:border-t-0',
-        index > 0 && 'lg:border-l lg:pl-6',
-        index < 3 && 'lg:pr-6'
-      )}
-    >
-      {children}
     </div>
   );
 }

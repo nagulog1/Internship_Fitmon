@@ -42,32 +42,28 @@ export default function Workout() {
 
   return (
     <div className="animate-rise">
-      <PageHeader
-        label="Library"
-        title="Workouts"
-        description="Short technique videos. Watch one before a set, then let FitMon check your form."
-      />
+      <PageHeader kicker="Library" title="Workouts" description="Short technique videos. Watch one before a set, then let FitMon check your form." />
 
-      <div className="mb-8 flex flex-col-reverse gap-4 border-b border-rule md:flex-row md:items-end md:justify-between">
-        <div className="flex gap-6 overflow-x-auto" aria-label="Muscle group">
+      <div className="mb-6 flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
+        <div className="flex gap-1 overflow-x-auto rounded-full bg-surface p-1 md:inline-flex" aria-label="Muscle group">
           {MUSCLES.map((m) => (
-            <button key={m} type="button" aria-pressed={muscle === m} onClick={() => setMuscle(m)} className="tab">
+            <button key={m} type="button" aria-pressed={muscle === m} onClick={() => setMuscle(m)} className="seg">
               {m}
             </button>
           ))}
         </div>
-        <div className="relative md:mb-2 md:w-72">
-          <Search className="pointer-events-none absolute top-1/2 left-3 size-4 -translate-y-1/2 text-muted" aria-hidden />
+        <div className="relative md:w-72">
+          <Search className="pointer-events-none absolute top-1/2 left-0 size-4 -translate-y-1/2 text-muted" aria-hidden />
           <label htmlFor="workout-search" className="sr-only">Search workouts</label>
-          <input id="workout-search" className="field h-10 pl-9 text-sm" placeholder="Search" value={search} onChange={(event) => setSearch(event.target.value)} />
+          <input id="workout-search" className="field h-11 pl-7" placeholder="Search workouts" value={search} onChange={(event) => setSearch(event.target.value)} />
         </div>
       </div>
 
       {filtered.length ? (
-        <ul className="grid gap-x-6 gap-y-10 sm:grid-cols-2 xl:grid-cols-3">
-          {filtered.map((workout, index) => (
-            <li key={workout.id} className="group">
-              <div className="relative aspect-video overflow-hidden bg-ink">
+        <ul className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
+          {filtered.map((workout) => (
+            <li key={workout.id} className="group card overflow-hidden">
+              <div className="relative isolate aspect-[4/3] bg-ink">
                 {playing === workout.id ? (
                   <iframe
                     src={`https://www.youtube-nocookie.com/embed/${workout.ytId}?rel=0&autoplay=1`}
@@ -77,27 +73,26 @@ export default function Workout() {
                     className="absolute inset-0 size-full border-0"
                   />
                 ) : (
-                  <button type="button" onClick={() => setPlaying(workout.id)} className="absolute inset-0 size-full text-left" aria-label={`Play ${workout.name}`}>
+                  <button type="button" onClick={() => setPlaying(workout.id)} className="absolute inset-0 size-full text-left text-white" aria-label={`Play ${workout.name}`}>
                     <img
                       src={`https://i.ytimg.com/vi/${workout.ytId}/hqdefault.jpg`}
                       alt=""
                       loading="lazy"
                       onError={(event) => { event.currentTarget.style.visibility = 'hidden'; }}
-                      className="size-full object-cover grayscale transition duration-300 group-hover:grayscale-0"
+                      className="absolute inset-0 -z-20 size-full object-cover transition duration-500 group-hover:scale-[1.03]"
                     />
-                    <span className="figure absolute top-3 left-4 text-2xl text-paper drop-shadow">{String(index + 1).padStart(2, '0')}</span>
-                    <span className="absolute right-0 bottom-0 grid size-12 place-items-center bg-signal text-ink transition-colors group-hover:bg-paper">
-                      <Play className="size-4 fill-current" />
+                    <span className="photo-scrim absolute inset-0 -z-10" aria-hidden />
+                    <span className="absolute top-5 left-5 text-sm text-white/85">{workout.muscle}</span>
+                    <span className="absolute top-5 right-5 flex items-center gap-1 text-sm text-white/85">
+                      <Play className="size-3 fill-current" /> Play
                     </span>
+                    <span className="headline absolute right-5 bottom-5 left-5 text-[34px]">{workout.name}</span>
                   </button>
                 )}
               </div>
-              <div className="mt-3 flex items-start justify-between gap-3 border-b border-rule pb-3">
-                <div>
-                  <p className="text-[17px] font-semibold">{workout.name}</p>
-                  <p className="mt-0.5 text-sm text-muted">{workout.muscle}</p>
-                </div>
-                <span className={cx('tag mt-1', difficultyTag[workout.difficulty])}>{workout.difficulty}</span>
+              <div className="flex items-center justify-between gap-3 px-5 py-4">
+                <span className="text-sm text-ink-2">{workout.muscle}</span>
+                <span className={cx('tag', difficultyTag[workout.difficulty])}>{workout.difficulty}</span>
               </div>
             </li>
           ))}
@@ -106,7 +101,7 @@ export default function Workout() {
         <EmptyState
           title="No matches"
           description="Try a different search or muscle group."
-          action={<button type="button" className="btn btn-line" onClick={() => { setSearch(''); setMuscle('All'); }}>Clear filters</button>}
+          action={<button type="button" className="btn btn-outline" onClick={() => { setSearch(''); setMuscle('All'); }}>Clear filters</button>}
         />
       )}
     </div>

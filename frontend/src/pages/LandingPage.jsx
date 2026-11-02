@@ -1,24 +1,24 @@
 import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
-import { ArrowRight, Menu, X } from 'lucide-react';
+import { Menu, X } from 'lucide-react';
 import { API_BASE_URL } from '../services/apiClient';
 import useAuthStore from '../store/useAuthStore';
-import { CurlDiagram, Logo } from '../components/ui';
+import { CornerArrow, CurlDiagram, Logo } from '../components/ui';
 import { cx } from '../utils/format';
 
 const specs = [
-  { value: '92%', label: 'Form clarity' },
-  { value: '1.4k', label: 'Sessions analysed' },
-  { value: '120ms', label: 'Signal refresh' },
-  { value: '<200ms', label: 'On-device latency' },
+  { value: '92%', caption: 'Form clarity' },
+  { value: '1.4k', caption: 'Sessions analysed' },
+  { value: '120ms', caption: 'Signal refresh' },
+  { value: '<200ms', caption: 'On-device feedback' },
 ];
 
 const measures = [
   { title: 'Posture', copy: 'Shoulder, elbow and wrist alignment, scored out of 100 on every frame.' },
-  { title: 'Range of motion', copy: 'Flags half reps. You get the angle you reached, not just a count.' },
+  { title: 'Range of motion', copy: 'Flags half reps. You see the angle you reached, not just a count.' },
   { title: 'Elbow drift', copy: 'Notices when the elbow creeps forward to cheat the weight up.' },
   { title: 'Tempo', copy: 'Picks up when you rush the lowering phase as fatigue sets in.' },
-  { title: 'Grip pressure', copy: 'With the FitMon band, pressure joins the picture to spot overload.' },
+  { title: 'Grip pressure', copy: 'With the FitMon band, load joins the picture to spot overload.' },
   { title: 'Injury risk', copy: 'Rolls it all into one number you can actually act on.' },
 ];
 
@@ -30,16 +30,16 @@ const sampleRows = [
 ];
 
 const steps = [
-  { title: 'Prop up your phone or laptop', desc: 'Side-on, arm in frame. No markers, no suit.' },
-  { title: 'Press start and curl', desc: 'Cues appear the moment your form slips.' },
-  { title: 'End the set', desc: 'FitMon writes a report with a grade and what to fix.' },
-  { title: 'Come back stronger', desc: 'History shows whether your form is trending up.' },
+  { title: 'Set up', desc: 'Prop up your phone or laptop side-on, arm in frame. No markers, no suit.' },
+  { title: 'Curl', desc: 'Press start and train. Cues appear the moment your form slips.' },
+  { title: 'Review', desc: 'End the set and FitMon writes a report with a grade and what to fix.' },
+  { title: 'Improve', desc: 'History shows whether your form is trending up, session by session.' },
 ];
 
 const navLinks = [
-  { href: '#measures', label: 'What it measures' },
+  { href: '#measures', label: 'Platform' },
   { href: '#how', label: 'How it works' },
-  { href: '#hardware', label: 'Hardware' },
+  { href: '#hardware', label: 'Band' },
   { href: '#contact', label: 'Contact' },
 ];
 
@@ -104,155 +104,188 @@ export default function LandingPage() {
   };
 
   return (
-    <div className="min-h-screen overflow-x-hidden bg-paper" id="top">
-      {/* ── MASTHEAD ── */}
-      <header className="sticky top-0 z-50 border-b border-ink bg-paper/95 backdrop-blur-sm">
-        <div className="mx-auto flex h-16 max-w-7xl items-center justify-between gap-6 px-4 sm:px-6 lg:px-8">
-          <Logo />
-          <nav className="hidden items-center gap-7 lg:flex" aria-label="Primary">
-            {navLinks.map((link) => (
-              <a key={link.href} href={link.href} className="text-[13px] font-semibold tracking-[0.04em] text-ink-2 uppercase hover:text-ink">
-                {link.label}
-              </a>
-            ))}
-          </nav>
-          <div className="hidden items-center gap-5 lg:flex">
-            {!user ? <Link to="/login" className="btn-text">Sign in</Link> : null}
-            <Link to={primaryHref} className="btn btn-ink btn-sm">
-              {user ? 'Open app' : 'Start training'}
-            </Link>
-          </div>
-          <button type="button" className="grid size-10 place-items-center lg:hidden" onClick={() => setMenuOpen((v) => !v)} aria-expanded={menuOpen} aria-label="Menu">
-            {menuOpen ? <X className="size-6" /> : <Menu className="size-6" />}
-          </button>
-        </div>
-        {menuOpen ? (
-          <div className="border-t border-ink bg-paper px-4 pb-6 lg:hidden">
-            <nav className="flex flex-col" aria-label="Mobile">
+    <div className="min-h-screen overflow-x-hidden bg-canvas" id="top">
+      {/* ── HERO ── */}
+      <section className="relative isolate flex min-h-[100svh] flex-col overflow-hidden bg-ink text-white">
+        <img
+          src="/landing/hero.jpg"
+          alt="Athlete wearing the FitMon band on their wrist"
+          className="absolute inset-0 -z-20 size-full object-cover object-[60%_35%]"
+          fetchPriority="high"
+        />
+        <div className="photo-scrim absolute inset-0 -z-10" aria-hidden />
+
+        {/* Nav */}
+        <header className="relative z-20">
+          <div className="mx-auto flex h-20 max-w-[1320px] items-center justify-between gap-6 px-5 sm:px-8">
+            <Logo inverted />
+            <nav className="hidden items-center gap-8 lg:flex" aria-label="Primary">
               {navLinks.map((link) => (
-                <a key={link.href} href={link.href} onClick={() => setMenuOpen(false)} className="display border-b border-rule py-4 text-3xl">
+                <a key={link.href} href={link.href} className="text-sm text-white/80 transition-colors hover:text-white">
                   {link.label}
                 </a>
               ))}
             </nav>
-            <div className="mt-5 grid grid-cols-2 gap-2">
-              <Link to="/login" className="btn btn-line">Sign in</Link>
-              <Link to={primaryHref} className="btn btn-ink">Start training</Link>
+            <div className="hidden items-center gap-3 lg:flex">
+              {!user ? <Link to="/login" className="btn btn-sm btn-glass">Sign in</Link> : null}
+              <Link to={primaryHref} className="btn btn-sm btn-volt-flat">{user ? 'Open app' : 'Get started'}</Link>
             </div>
+            <button type="button" className="grid size-11 place-items-center rounded-full border border-white/40 bg-white/10 backdrop-blur-md lg:hidden" onClick={() => setMenuOpen((v) => !v)} aria-expanded={menuOpen} aria-label="Menu">
+              {menuOpen ? <X className="size-5" /> : <Menu className="size-5" />}
+            </button>
           </div>
-        ) : null}
-      </header>
+          {menuOpen ? (
+            <div className="mx-5 rounded-[4px] bg-white p-5 text-ink shadow-2xl lg:hidden">
+              <nav className="flex flex-col" aria-label="Mobile">
+                {navLinks.map((link) => (
+                  <a key={link.href} href={link.href} onClick={() => setMenuOpen(false)} className="headline border-b border-line py-4 text-3xl">
+                    {link.label}
+                  </a>
+                ))}
+              </nav>
+              <div className="mt-5 grid grid-cols-2 gap-3">
+                <Link to="/login" className="btn btn-outline">Sign in</Link>
+                <Link to={primaryHref} className="btn btn-volt-flat">Get started</Link>
+              </div>
+            </div>
+          ) : null}
+        </header>
 
-      {/* ── HERO ── */}
-      <section className="mx-auto grid max-w-7xl gap-12 px-4 pt-12 pb-16 sm:px-6 lg:grid-cols-12 lg:gap-8 lg:px-8 lg:pt-20 lg:pb-24">
-        <div className="animate-rise lg:col-span-7">
-          <p className="label text-ink">Form coaching from your webcam</p>
-          <h1 className="display mt-6 text-[72px] sm:text-[112px] xl:text-[144px]">
-            Every rep
-            <br />
-            on the
-            <br />
-            record<span className="text-signal">.</span>
-          </h1>
-          <p className="mt-8 max-w-lg text-lg leading-relaxed text-ink-2">
-            FitMon watches your bicep curls through the camera you already have, scores your posture on every rep, and tells you
-            what to fix before it turns into a sore elbow.
-          </p>
-          <div className="mt-8 flex flex-wrap items-center gap-5">
-            <Link to={primaryHref} className="btn btn-signal btn-lg">
-              Try a session <ArrowRight className="size-4" />
+        <div className="relative mx-auto grid w-full max-w-[1320px] flex-1 grid-cols-1 px-5 pt-6 pb-8 sm:px-8 lg:grid-cols-[200px_1fr_260px] lg:gap-6">
+          <p className="hidden text-sm text-white/75 lg:block">Built for the gym floor</p>
+
+          <div className="animate-rise">
+            <h1 className="headline text-[64px] sm:text-[112px] xl:text-[150px]">
+              Every rep
+              <br />
+              on the
+              <br />
+              rec<span className="text-volt">/</span>ord
+            </h1>
+            <p className="mt-6 max-w-[260px] text-[15px] leading-snug text-white/90">
+              Form coaching from the camera you already have.
+            </p>
+            <Link to={primaryHref} className="btn btn-volt mt-10">
+              Start a session
             </Link>
-            <a href="#how" className="btn-text">See how it works</a>
+          </div>
+
+          <div className="mt-12 flex flex-col justify-between gap-8 lg:mt-0">
+            <div className="hidden text-right lg:block">
+              <p className="text-sm text-white/75">Works with</p>
+              <p className="mt-2 text-lg font-medium tracking-tight">Any webcam · FSR band</p>
+            </div>
+
+            <a href="#measures" className="group card relative block w-full max-w-[260px] self-end p-5 text-ink lg:self-auto">
+              <div className="flex items-start justify-between">
+                <p className="text-[15px] font-medium">Form in motion</p>
+                <CornerArrow className="transition-transform group-hover:translate-x-0.5 group-hover:-translate-y-0.5" />
+              </div>
+              <CurlDiagram className="mt-3 w-full" />
+            </a>
           </div>
         </div>
 
-        <figure className="lg:col-span-5 lg:pt-10">
-          <div className="graph-paper border border-ink bg-sheet p-6 sm:p-8">
-            <CurlDiagram className="mx-auto w-full max-w-[420px]" />
+        {/* Hero footer */}
+        <div className="relative mx-auto grid w-full max-w-[1320px] gap-8 px-5 pb-10 sm:px-8 md:grid-cols-[1fr_auto] md:items-end lg:pl-[calc(200px+1.5rem+2rem)]">
+          <div>
+            <p className="lede max-w-xl text-[28px] sm:text-[38px]">Scores your posture on every rep, and tells you what to fix.</p>
+            <a href="#measures" className="link-volt mt-5">Learn more</a>
           </div>
-          <figcaption className="mt-3 flex justify-between gap-4 text-xs text-muted">
-            <span><span className="font-semibold text-ink">Fig. 1</span> What FitMon reads on every curl.</span>
-            <span className="tabular-nums">Rep 11 of 12</span>
-          </figcaption>
-        </figure>
+          <div className="flex items-stretch gap-8">
+            <span className="hidden w-px bg-white/40 md:block" aria-hidden />
+            <div className="pr-4 text-center">
+              <p className="stat text-6xl">&lt;200ms</p>
+              <p className="mt-2 text-sm text-white/85">On-device feedback</p>
+            </div>
+          </div>
+        </div>
       </section>
 
-      {/* ── SPEC STRIP ── */}
-      <section className="border-y border-ink" aria-label="Specs">
-        <dl className="mx-auto grid max-w-7xl grid-cols-2 px-4 sm:px-6 lg:grid-cols-4 lg:px-8">
+      {/* ── INTRO STATEMENT ── */}
+      <section className="mx-auto max-w-[1320px] px-5 py-24 sm:px-8 lg:py-36">
+        <p className="kicker">About FitMon</p>
+        <p className="lede mt-8 max-w-5xl text-[34px] sm:text-[52px]">
+          FitMon watches your bicep curls through your webcam, scores every rep, and flags drift{' '}
+          <span className="text-muted">before it turns into a sore elbow. No suit, no markers, no guesswork.</span>
+        </p>
+        <dl className="mt-20 grid grid-cols-2 gap-y-10 border-t border-line pt-10 lg:grid-cols-4">
           {specs.map((spec, i) => (
-            <div key={spec.label} className={cx('py-6', i % 2 === 1 && 'border-l border-rule pl-5', i >= 2 && 'border-t border-rule lg:border-t-0', i > 0 && 'lg:border-l lg:pl-8')}>
-              <dd className="figure text-5xl sm:text-6xl">{spec.value}</dd>
-              <dt className="label mt-2">{spec.label}</dt>
+            <div key={spec.caption} className={cx('pr-6', i > 0 && 'lg:border-l lg:border-line lg:pl-8', i % 2 === 1 && 'border-l border-line pl-6')}>
+              <dd className="stat text-6xl sm:text-7xl">{spec.value}</dd>
+              <dt className="mt-3 text-sm text-ink-2">{spec.caption}</dt>
             </div>
           ))}
         </dl>
       </section>
 
       {/* ── WHAT IT MEASURES ── */}
-      <section id="measures" className="mx-auto grid max-w-7xl scroll-mt-16 gap-12 px-4 py-20 sm:px-6 lg:grid-cols-12 lg:px-8 lg:py-28">
-        <div className="lg:col-span-4">
-          <div className="lg:sticky lg:top-28">
-            <p className="label text-ink">What it measures</p>
-            <h2 className="display mt-5 text-[52px] sm:text-[64px]">Six things it watches so you don't have to.</h2>
+      <section id="measures" className="scroll-mt-4 bg-surface">
+        <div className="mx-auto grid max-w-[1320px] gap-14 px-5 py-24 sm:px-8 lg:grid-cols-[1fr_1.15fr] lg:py-32">
+          <div className="relative min-h-[460px] overflow-hidden rounded-[4px] bg-ink lg:sticky lg:top-6 lg:h-[calc(100vh-3rem)] lg:max-h-[720px]">
+            <img src="/landing/band-closeup.jpg" alt="Close-up of the FitMon band" loading="lazy" className="absolute inset-0 size-full object-cover" />
+            <div className="photo-scrim absolute inset-0" aria-hidden />
+            <div className="absolute inset-x-0 bottom-0 p-8 text-white">
+              <p className="text-sm text-white/80">What it measures</p>
+              <p className="headline mt-4 text-5xl sm:text-6xl">Six signals.<br />One score.</p>
+            </div>
           </div>
+
+          <ol className="flex flex-col">
+            {measures.map((item, i) => (
+              <li key={item.title} className="grid grid-cols-[48px_1fr] gap-4 border-b border-line py-8 first:pt-0">
+                <span className="pt-2 text-sm text-muted tabular-nums">{String(i + 1).padStart(2, '0')}</span>
+                <div>
+                  <h3 className="lede text-[32px] sm:text-[40px]">{item.title}</h3>
+                  <p className="mt-3 max-w-md text-base leading-relaxed text-ink-2">{item.copy}</p>
+                </div>
+              </li>
+            ))}
+          </ol>
         </div>
-        <ol className="grid gap-x-10 sm:grid-cols-2 lg:col-span-8">
-          {measures.map((item, i) => (
-            <li key={item.title} className="border-t border-ink py-6">
-              <div className="flex items-baseline gap-4">
-                <span className="figure text-xl text-signal">{String(i + 1).padStart(2, '0')}</span>
-                <h3 className="text-xl font-bold">{item.title}</h3>
-              </div>
-              <p className="mt-2 pl-10 text-[15px] leading-relaxed text-ink-2">{item.copy}</p>
-            </li>
-          ))}
-        </ol>
       </section>
 
       {/* ── READOUT (dark) ── */}
-      <section className="bg-ink text-paper">
-        <div className="mx-auto grid max-w-7xl gap-12 px-4 py-20 sm:px-6 lg:grid-cols-12 lg:px-8 lg:py-28">
-          <div className="lg:col-span-5">
-            <p className="text-[11px] font-semibold tracking-[0.08em] text-paper/60 uppercase">Why it matters</p>
-            <h2 className="display mt-5 text-[52px] sm:text-[64px]">
-              Catch the drift <span className="text-signal">before</span> it hurts.
+      <section className="bg-ink text-white">
+        <div className="mx-auto grid max-w-[1320px] gap-14 px-5 py-24 sm:px-8 lg:grid-cols-[1fr_1.2fr] lg:py-32">
+          <div>
+            <p className="text-sm text-white/65">Why it matters</p>
+            <h2 className="headline mt-6 text-[52px] sm:text-[76px]">
+              Catch the
+              <br />
+              drift <span className="text-volt">early</span>
             </h2>
-            <p className="mt-6 max-w-md text-[17px] leading-relaxed text-paper/75">
+            <p className="mt-8 max-w-md text-[17px] leading-relaxed text-white/75">
               Form rarely breaks all at once. It slides a few degrees at a time as you tire. FitMon logs every rep so you can see
               exactly where the set started to go.
             </p>
-            <Link to={primaryHref} className="btn btn-signal mt-8">Log your first set</Link>
+            <Link to={primaryHref} className="btn btn-volt mt-10 outline-white/40">Log your first set</Link>
           </div>
 
-          <div className="lg:col-span-7">
-            <div className="flex items-baseline justify-between border-b border-paper/30 pb-3">
-              <p className="text-[11px] font-semibold tracking-[0.08em] text-paper/60 uppercase">Sample readout · last four reps</p>
-              <p className="text-[11px] font-semibold tracking-[0.08em] text-paper/60 uppercase">Bicep curl · 12 kg</p>
+          <div className="self-end">
+            <div className="flex items-baseline justify-between border-b border-white/20 pb-4 text-sm text-white/65">
+              <span>Sample readout · last four reps</span>
+              <span>Bicep curl · 12 kg</span>
             </div>
             <table className="w-full text-left tabular-nums">
               <thead>
-                <tr className="border-b border-paper/15 text-[11px] tracking-[0.08em] text-paper/60 uppercase">
-                  <th scope="col" className="py-3 pr-3 font-semibold">Rep</th>
-                  <th scope="col" className="py-3 pr-3 font-semibold">Range</th>
-                  <th scope="col" className="py-3 pr-3 font-semibold">Form</th>
-                  <th scope="col" className="hidden py-3 pr-3 font-semibold sm:table-cell">Pressure</th>
-                  <th scope="col" className="py-3 font-semibold">Flag</th>
+                <tr className="text-xs text-white/55">
+                  <th scope="col" className="py-4 pr-3 font-normal">Rep</th>
+                  <th scope="col" className="py-4 pr-3 font-normal">Range</th>
+                  <th scope="col" className="py-4 pr-3 font-normal">Form</th>
+                  <th scope="col" className="hidden py-4 pr-3 font-normal sm:table-cell">Pressure</th>
+                  <th scope="col" className="py-4 text-right font-normal">Flag</th>
                 </tr>
               </thead>
               <tbody>
                 {sampleRows.map((row) => (
-                  <tr key={row.rep} className="border-b border-paper/15">
-                    <td className="figure py-4 pr-3 text-3xl">{row.rep}</td>
-                    <td className="py-4 pr-3 text-paper/80">{row.range}</td>
-                    <td className={cx('figure py-4 pr-3 text-3xl', row.form < 60 ? 'text-signal' : '')}>{row.form}</td>
-                    <td className="hidden py-4 pr-3 text-paper/80 sm:table-cell">{row.pressure}</td>
-                    <td className="py-4">
-                      {row.flag ? (
-                        <span className="tag border-signal text-signal">{row.flag}</span>
-                      ) : (
-                        <span className="text-xs font-semibold tracking-[0.06em] text-paper/50 uppercase">Clean</span>
-                      )}
+                  <tr key={row.rep} className="border-t border-white/12">
+                    <td className="stat py-5 pr-3 text-4xl">{row.rep}</td>
+                    <td className="py-5 pr-3 text-white/75">{row.range}</td>
+                    <td className={cx('stat py-5 pr-3 text-4xl', row.form < 60 && 'text-volt')}>{row.form}</td>
+                    <td className="hidden py-5 pr-3 text-white/75 sm:table-cell">{row.pressure}</td>
+                    <td className="py-5 text-right">
+                      {row.flag ? <span className="tag tag-volt">{row.flag}</span> : <span className="text-sm text-white/45">Clean</span>}
                     </td>
                   </tr>
                 ))}
@@ -263,43 +296,44 @@ export default function LandingPage() {
       </section>
 
       {/* ── HOW IT WORKS ── */}
-      <section id="how" className="mx-auto max-w-7xl scroll-mt-16 px-4 py-20 sm:px-6 lg:px-8 lg:py-28">
-        <div className="flex flex-col gap-4 border-b-2 border-ink pb-6 md:flex-row md:items-end md:justify-between">
-          <h2 className="display text-[52px] sm:text-[64px]">Setup to report in one set.</h2>
-          <p className="max-w-sm text-[15px] text-ink-2">No wearables required. The band adds pressure data if you have one.</p>
+      <section id="how" className="mx-auto max-w-[1320px] scroll-mt-4 px-5 py-24 sm:px-8 lg:py-32">
+        <div className="flex flex-col gap-6 md:flex-row md:items-end md:justify-between">
+          <div>
+            <p className="kicker">How it works</p>
+            <h2 className="headline mt-6 text-[52px] sm:text-[76px]">One set.<br />One report.</h2>
+          </div>
+          <p className="max-w-sm text-base text-ink-2">No wearables required. The band adds pressure data if you have one.</p>
         </div>
-        <ol className="grid sm:grid-cols-2 lg:grid-cols-4">
+        <ol className="mt-16 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
           {steps.map((step, i) => (
-            <li key={step.title} className={cx('border-b border-rule py-8 sm:pr-8', i > 0 && 'lg:border-l lg:pl-8', i % 2 === 1 && 'sm:border-l sm:pl-8 lg:pl-8')}>
-              <span className="figure text-[80px] text-ink/15">{i + 1}</span>
-              <h3 className="mt-2 text-lg font-bold">{step.title}</h3>
-              <p className="mt-2 text-[15px] text-ink-2">{step.desc}</p>
+            <li key={step.title} className="card flex min-h-[260px] flex-col justify-between p-7">
+              <span className="stat text-[72px] text-ink/15">0{i + 1}</span>
+              <div>
+                <h3 className="text-xl font-medium tracking-tight">{step.title}</h3>
+                <p className="mt-2 text-[15px] leading-relaxed text-ink-2">{step.desc}</p>
+              </div>
             </li>
           ))}
         </ol>
       </section>
 
       {/* ── HARDWARE ── */}
-      <section id="hardware" className="scroll-mt-16 border-y border-ink bg-sheet">
-        <div className="mx-auto grid max-w-7xl lg:grid-cols-2">
-          <figure className="relative min-h-[360px] border-ink lg:border-r">
-            <img src="/landing/fitness-band.png" alt="The FitMon pressure band worn on an athlete's wrist" loading="lazy" className="absolute inset-0 size-full object-cover" />
-            <figcaption className="absolute bottom-0 left-0 bg-ink px-4 py-2 text-xs text-paper">
-              <span className="font-semibold">Fig. 2</span> FSR band on the working wrist.
-            </figcaption>
-          </figure>
-          <div className="px-4 py-16 sm:px-10 lg:py-24">
-            <p className="label text-ink">Optional hardware</p>
-            <h2 className="display mt-5 text-[52px] sm:text-[64px]">A band you forget you're wearing.</h2>
-            <p className="mt-6 max-w-md text-[17px] leading-relaxed text-ink-2">
+      <section id="hardware" className="relative isolate scroll-mt-4 overflow-hidden bg-ink text-white">
+        <img src="/landing/hero.jpg" alt="" loading="lazy" className="absolute inset-0 -z-20 size-full object-cover object-[70%_40%]" />
+        <div className="absolute inset-0 -z-10 bg-gradient-to-r from-ink/85 via-ink/50 to-transparent" aria-hidden />
+        <div className="mx-auto grid max-w-[1320px] gap-10 px-5 py-28 sm:px-8 lg:grid-cols-2 lg:py-40">
+          <div>
+            <p className="text-sm text-white/70">Optional hardware</p>
+            <h2 className="headline mt-6 text-[52px] sm:text-[76px]">The FitMon<br />band</h2>
+            <p className="mt-8 max-w-md text-[17px] leading-relaxed text-white/80">
               A lightweight force-sensor band streams grip load over Wi-Fi. Combined with the camera, FitMon can tell a heavy rep
               from a bad one.
             </p>
-            <dl className="mt-10 border-t border-ink">
-              {[['Sensors', 'FSR array'], ['Connectivity', 'ESP8266 · Wi-Fi'], ['Build', 'Flexible, sweat-safe']].map(([k, v]) => (
-                <div key={k} className="flex justify-between gap-4 border-b border-rule py-3 text-[15px]">
-                  <dt className="text-muted">{k}</dt>
-                  <dd className="font-semibold">{v}</dd>
+            <dl className="mt-12 grid max-w-md grid-cols-3 gap-6 border-t border-white/25 pt-6">
+              {[['Sensors', 'FSR array'], ['Link', 'ESP8266'], ['Build', 'Sweat-safe']].map(([k, v]) => (
+                <div key={k}>
+                  <dt className="text-xs text-white/60">{k}</dt>
+                  <dd className="mt-1.5 font-medium">{v}</dd>
                 </div>
               ))}
             </dl>
@@ -308,81 +342,82 @@ export default function LandingPage() {
       </section>
 
       {/* ── CTA ── */}
-      <section className="bg-signal">
-        <div className="mx-auto flex max-w-7xl flex-col gap-8 px-4 py-16 sm:px-6 lg:flex-row lg:items-end lg:justify-between lg:px-8 lg:py-20">
-          <h2 className="display max-w-3xl text-[60px] sm:text-[88px]">Train with a second pair of eyes.</h2>
+      <section className="mx-auto max-w-[1320px] px-5 py-24 sm:px-8 lg:py-36">
+        <div className="flex flex-col gap-10 lg:flex-row lg:items-end lg:justify-between">
+          <h2 className="headline text-[56px] sm:text-[96px] xl:text-[120px]">
+            Train with
+            <br />a second
+            <br />pair of eyes
+          </h2>
           <div className="flex flex-wrap gap-3">
-            <Link to={primaryHref} className="btn btn-lg bg-ink text-paper hover:bg-paper hover:text-ink">
-              Start training <ArrowRight className="size-4" />
-            </Link>
-            <a href="#contact" className="btn btn-lg border border-ink text-ink hover:bg-ink hover:text-paper">Book a demo</a>
+            <Link to={primaryHref} className="btn btn-lg btn-volt-flat">Start training</Link>
+            <a href="#contact" className="btn btn-lg btn-outline">Book a demo</a>
           </div>
         </div>
       </section>
 
       {/* ── CONTACT ── */}
-      <section id="contact" className="mx-auto grid max-w-7xl scroll-mt-16 gap-12 px-4 py-20 sm:px-6 lg:grid-cols-12 lg:px-8 lg:py-28">
-        <div className="lg:col-span-5">
-          <p className="label text-ink">For gyms, clinics & teams</p>
-          <h2 className="display mt-5 text-[52px] sm:text-[64px]">Run FitMon with your athletes.</h2>
-          <p className="mt-6 max-w-md text-[17px] leading-relaxed text-ink-2">
-            Tell us about your program and who you train. We reply within a day, usually sooner.
-          </p>
-        </div>
-
-        <form className="lg:col-span-7" onSubmit={handleContactSubmit} noValidate>
-          <div className="grid gap-x-6 gap-y-5 border-t-2 border-ink pt-6 sm:grid-cols-2">
-            <Field label="Name" htmlFor="c-name">
-              <input id="c-name" className="field" name="name" value={contactForm.name} onChange={handleContactChange} required autoComplete="name" />
-            </Field>
-            <Field label="Email" htmlFor="c-email">
-              <input id="c-email" className="field" type="email" name="email" value={contactForm.email} onChange={handleContactChange} required autoComplete="email" />
-            </Field>
-            <Field label="Organisation" htmlFor="c-org" optional className="sm:col-span-2">
-              <input id="c-org" className="field" name="organization" placeholder="Gym, clinic, team…" value={contactForm.organization} onChange={handleContactChange} autoComplete="organization" />
-            </Field>
-            <Field label="Message" htmlFor="c-msg" className="sm:col-span-2">
-              <textarea id="c-msg" className="field" rows="5" name="message" value={contactForm.message} onChange={handleContactChange} required />
-            </Field>
-          </div>
-          {contactStatus ? (
-            <p role="status" aria-live="polite" className={cx('mt-5 border-l-4 bg-sheet px-4 py-3 text-sm font-medium', contactStatus.type === 'success' ? 'border-good text-good' : 'border-bad text-bad')}>
-              {contactStatus.message}
+      <section id="contact" className="scroll-mt-4 bg-surface">
+        <div className="mx-auto grid max-w-[1320px] gap-14 px-5 py-24 sm:px-8 lg:grid-cols-2 lg:py-32">
+          <div>
+            <p className="kicker">For gyms, clinics &amp; teams</p>
+            <h2 className="headline mt-6 text-[52px] sm:text-[76px]">Let's talk</h2>
+            <p className="mt-8 max-w-md text-[17px] leading-relaxed text-ink-2">
+              Tell us about your program and who you train. We reply within a day, usually sooner.
             </p>
-          ) : null}
-          <button type="submit" className="btn btn-ink btn-lg mt-6" disabled={isSubmitting}>
-            {isSubmitting ? 'Sending…' : 'Send message'}
-          </button>
-        </form>
+          </div>
+
+          <form onSubmit={handleContactSubmit} noValidate>
+            <div className="grid gap-x-8 gap-y-8 sm:grid-cols-2">
+              <Field label="Name" htmlFor="c-name">
+                <input id="c-name" className="field" name="name" value={contactForm.name} onChange={handleContactChange} required autoComplete="name" />
+              </Field>
+              <Field label="Email" htmlFor="c-email">
+                <input id="c-email" className="field" type="email" name="email" value={contactForm.email} onChange={handleContactChange} required autoComplete="email" />
+              </Field>
+              <Field label="Organisation (optional)" htmlFor="c-org" className="sm:col-span-2">
+                <input id="c-org" className="field" name="organization" value={contactForm.organization} onChange={handleContactChange} autoComplete="organization" />
+              </Field>
+              <Field label="Message" htmlFor="c-msg" className="sm:col-span-2">
+                <textarea id="c-msg" className="field" rows="4" name="message" value={contactForm.message} onChange={handleContactChange} required />
+              </Field>
+            </div>
+            {contactStatus ? (
+              <p role="status" aria-live="polite" className={cx('mt-6 text-sm font-medium', contactStatus.type === 'success' ? 'text-good' : 'text-bad')}>
+                {contactStatus.message}
+              </p>
+            ) : null}
+            <button type="submit" className="btn btn-lg btn-dark mt-10" disabled={isSubmitting}>
+              {isSubmitting ? 'Sending…' : 'Send message'}
+            </button>
+          </form>
+        </div>
       </section>
 
       {/* ── FOOTER ── */}
-      <footer className="border-t border-ink">
-        <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-          <p className="display -mb-[0.12em] pt-10 text-[22vw] leading-[0.8] lg:text-[240px]" aria-hidden>
-            Fitmon<span className="text-signal">.</span>
-          </p>
-          <div className="flex flex-col gap-4 border-t border-rule py-6 text-sm sm:flex-row sm:items-center sm:justify-between">
-            <nav className="flex flex-wrap gap-x-6 gap-y-2" aria-label="Footer">
+      <footer className="bg-ink text-white">
+        <div className="mx-auto max-w-[1320px] px-5 sm:px-8">
+          <div className="flex flex-col gap-6 py-10 sm:flex-row sm:items-center sm:justify-between">
+            <nav className="flex flex-wrap gap-x-8 gap-y-2 text-sm" aria-label="Footer">
               {navLinks.map((link) => (
-                <a key={link.href} href={link.href} className="text-ink-2 hover:text-ink">{link.label}</a>
+                <a key={link.href} href={link.href} className="text-white/70 hover:text-white">{link.label}</a>
               ))}
             </nav>
-            <p className="text-muted">© {new Date().getFullYear()} FitMon. Training guidance, not medical advice.</p>
+            <p className="text-sm text-white/55">© {new Date().getFullYear()} FitMon. Training guidance, not medical advice.</p>
           </div>
+          <p className="headline -mb-[0.1em] border-t border-white/15 pt-8 text-[24vw] leading-[0.8] lg:text-[300px]" aria-hidden>
+            Fit<span className="text-volt">/</span>Mon
+          </p>
         </div>
       </footer>
     </div>
   );
 }
 
-function Field({ label, htmlFor, optional, className = '', children }) {
+function Field({ label, htmlFor, className = '', children }) {
   return (
-    <div className={cx('flex flex-col gap-2', className)}>
-      <label htmlFor={htmlFor} className="label text-ink">
-        {label}
-        {optional ? <span className="ml-1.5 font-normal tracking-normal text-muted normal-case">optional</span> : null}
-      </label>
+    <div className={cx('flex flex-col', className)}>
+      <label htmlFor={htmlFor} className="text-sm text-muted">{label}</label>
       {children}
     </div>
   );
