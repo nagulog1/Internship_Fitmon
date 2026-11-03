@@ -8,7 +8,11 @@
 */
 
 @theme {
-  --font-sans: 'Inter Tight', ui-sans-serif, system-ui, -apple-system, 'Segoe UI', sans-serif;
+  --font-sans: 'Geist', ui-sans-serif, system-ui, -apple-system, 'Segoe UI', sans-serif;
+  --font-mono: 'Geist Mono', ui-monospace, 'SFMono-Regular', Menlo, monospace;
+
+  /* Weighted, decelerating curve used for every transition */
+  --ease-fluid: cubic-bezier(0.22, 1, 0.36, 1);
 
   --color-canvas: #eceeed;
   --color-surface: #ffffff;
@@ -32,12 +36,12 @@
   --color-bad: #c62f22;
   --color-info: #2364c8;
 
-  --animate-rise: rise 0.6s cubic-bezier(0.2, 0.8, 0.2, 1) both;
-  --animate-pulse-soft: pulse-soft 1.6s ease-in-out infinite;
-  --animate-slide: slide 1.2s ease-in-out infinite;
+  --animate-rise: rise 0.7s cubic-bezier(0.22, 1, 0.36, 1) both;
+  --animate-pulse-soft: pulse-soft 1.6s cubic-bezier(0.22, 1, 0.36, 1) infinite;
+  --animate-slide: slide 1.2s cubic-bezier(0.22, 1, 0.36, 1) infinite;
 
   @keyframes rise {
-    from { opacity: 0; transform: translateY(14px); }
+    from { opacity: 0; transform: translateY(24px); }
     to { opacity: 1; transform: translateY(0); }
   }
   @keyframes pulse-soft {
@@ -50,11 +54,20 @@
   }
 }
 
+/* Hero heading gradient: text only, never a background */
+:root {
+  --hero-from: #000000;
+  --hero-to: #666666;
+}
+
 :root[data-theme='dark'] {
   color-scheme: dark;
 
-  --color-canvas: #111316;
-  --color-surface: #1a1d21;
+  --hero-from: #ffffff;
+  --hero-to: #9b9b9b;
+
+  --color-canvas: #000000;
+  --color-surface: #181818;
   --color-ink: #eef0f1;
   --color-ink-2: #b6bcc1;
   --color-muted: #949ba2;
@@ -68,7 +81,7 @@
   --color-bad: #ff7a6e;
   --color-info: #79adff;
 
-  --color-panel: #1e2227;
+  --color-panel: #1f1f1f;
   --color-on-ink: #0e1013;
   --color-on-bad: #0e1013;
 }
@@ -107,6 +120,54 @@
   [role='button']:not(:disabled) {
     cursor: pointer;
   }
+
+  /* Never leave a single word alone on the last line */
+  h1, h2, h3, h4, h5, h6 {
+    text-wrap: balance;
+  }
+  p, li, dd, summary {
+    text-wrap: pretty;
+  }
+}
+
+/*
+  Named text styles. Every size is a Tailwind scale step paired with its own line height.
+  Defined as utilities so they take responsive variants (`heading-3 lg:heading-1`).
+*/
+@utility heading-1 { font-size: var(--text-6xl); line-height: var(--text-6xl--line-height); font-weight: var(--font-weight-semibold); letter-spacing: -0.03em; }
+@utility heading-2 { font-size: var(--text-5xl); line-height: var(--text-5xl--line-height); font-weight: var(--font-weight-semibold); letter-spacing: -0.03em; }
+@utility heading-3 { font-size: var(--text-4xl); line-height: var(--text-4xl--line-height); font-weight: var(--font-weight-semibold); letter-spacing: -0.02em; }
+@utility heading-4 { font-size: var(--text-3xl); line-height: var(--text-3xl--line-height); font-weight: var(--font-weight-semibold); letter-spacing: -0.02em; }
+@utility heading-5 { font-size: var(--text-2xl); line-height: var(--text-2xl--line-height); font-weight: var(--font-weight-semibold); letter-spacing: -0.01em; }
+@utility heading-6 { font-size: var(--text-xl); line-height: var(--text-xl--line-height); font-weight: var(--font-weight-semibold); }
+@utility title-1 { font-size: var(--text-xl); line-height: var(--text-xl--line-height); font-weight: var(--font-weight-medium); }
+@utility title-2 { font-size: var(--text-lg); line-height: var(--text-lg--line-height); font-weight: var(--font-weight-medium); }
+@utility title-3 { font-size: var(--text-base); line-height: var(--text-base--line-height); font-weight: var(--font-weight-medium); }
+@utility title-4 { font-size: var(--text-sm); line-height: var(--text-sm--line-height); font-weight: var(--font-weight-medium); }
+@utility title-5 { font-size: var(--text-xs); line-height: var(--text-xs--line-height); font-weight: var(--font-weight-medium); }
+@utility body-1 { font-size: var(--text-base); line-height: var(--text-base--line-height); font-weight: var(--font-weight-semibold); }
+@utility body-2 { font-size: var(--text-base); line-height: var(--text-base--line-height); font-weight: var(--font-weight-medium); }
+@utility body-3 { font-size: var(--text-base); line-height: var(--text-base--line-height); font-weight: var(--font-weight-normal); }
+@utility body-4 { font-size: var(--text-sm); line-height: var(--text-sm--line-height); font-weight: var(--font-weight-semibold); }
+@utility body-5 { font-size: var(--text-sm); line-height: var(--text-sm--line-height); font-weight: var(--font-weight-medium); }
+@utility body-6 { font-size: var(--text-sm); line-height: var(--text-sm--line-height); font-weight: var(--font-weight-normal); }
+/* Body 7: lead paragraphs such as the hero subheadline */
+@utility body-7 { font-size: var(--text-lg); line-height: var(--text-lg--line-height); font-weight: var(--font-weight-normal); }
+@utility button-lg { font-size: var(--text-lg); line-height: var(--text-lg--line-height); font-weight: var(--font-weight-semibold); }
+@utility button-md { font-size: var(--text-base); line-height: var(--text-base--line-height); font-weight: var(--font-weight-semibold); }
+@utility button-sm { font-size: var(--text-sm); line-height: var(--text-sm--line-height); font-weight: var(--font-weight-semibold); }
+@utility button-xsm { font-size: var(--text-xs); line-height: var(--text-xs--line-height); font-weight: var(--font-weight-semibold); }
+@utility caption-1 { font-size: var(--text-sm); line-height: var(--text-sm--line-height); font-weight: var(--font-weight-medium); }
+@utility caption-2 { font-size: var(--text-sm); line-height: var(--text-sm--line-height); font-weight: var(--font-weight-normal); }
+@utility caption-3 { font-size: var(--text-xs); line-height: var(--text-xs--line-height); font-weight: var(--font-weight-semibold); }
+@utility caption-4 { font-size: var(--text-xs); line-height: var(--text-xs--line-height); font-weight: var(--font-weight-medium); }
+@utility caption-5 { font-size: var(--text-xs); line-height: var(--text-xs--line-height); font-weight: var(--font-weight-normal); }
+
+@utility text-gradient-hero {
+  background-image: linear-gradient(90deg, var(--hero-from), var(--hero-to));
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
 }
 
 @layer components {
@@ -175,7 +236,7 @@
   }
 
   .card {
-    @apply rounded-[4px] bg-surface;
+    @apply rounded-sm bg-surface;
   }
   .card-pad {
     @apply p-6 sm:p-8;
@@ -206,6 +267,9 @@
   .field {
     @apply h-12 w-full border-0 border-b border-line-strong bg-transparent px-0 text-base text-ink transition-colors outline-none placeholder:text-muted focus:border-ink;
   }
+  .field[aria-invalid='true'] {
+    @apply border-bad;
+  }
   textarea.field {
     @apply h-auto min-h-28 resize-y py-3;
   }
@@ -225,6 +289,40 @@
     @apply absolute inset-y-0 left-0 w-1/3 animate-slide bg-gradient-to-r from-transparent via-ink/[0.05] to-transparent;
   }
 
+  /* Landing page buttons: 8px by 12px padding, sentence case, the fluid curve on every state */
+  .button {
+    @apply button-md inline-flex shrink-0 items-center justify-center gap-2 rounded-full px-3 py-2 whitespace-nowrap transition-[background-color,border-color,color,transform] duration-300 ease-fluid hover:-translate-y-0.5 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink active:translate-y-0 active:scale-[0.98] disabled:pointer-events-none disabled:opacity-40;
+  }
+  .button-primary {
+    @apply bg-volt text-on-volt hover:bg-[#e9fb66];
+  }
+  .button-secondary {
+    @apply border border-line-strong text-ink hover:border-ink hover:bg-ink/5;
+  }
+  .button-dark {
+    @apply bg-ink text-on-ink hover:bg-ink/85;
+  }
+
+  /* Scroll reveal: sections rise 32px and fade in once */
+  .reveal {
+    opacity: 0;
+    transform: translateY(2rem);
+    transition: opacity 700ms var(--ease-fluid), transform 700ms var(--ease-fluid);
+  }
+  .reveal[data-shown='true'] {
+    opacity: 1;
+    transform: none;
+  }
+
+  /* Tagline reveal: each word goes from muted to full ink in reading order */
+  .tagline-word {
+    opacity: 0.3;
+    transition: opacity 500ms var(--ease-fluid);
+  }
+  .tagline-word[data-on='true'] {
+    opacity: 1;
+  }
+
   /* Darkening for photos so white type stays readable */
   .photo-scrim {
     background:
@@ -241,5 +339,13 @@
     animation-iteration-count: 1 !important;
     transition-duration: 0.01ms !important;
     scroll-behavior: auto !important;
+  }
+
+  /* Movement becomes a plain fade; the tagline shows at full ink straight away */
+  .reveal {
+    transform: none;
+  }
+  .tagline-word {
+    opacity: 1;
   }
 }

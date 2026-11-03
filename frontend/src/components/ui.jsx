@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
-import { Moon, Sun } from 'lucide-react';
+import { MoonIcon, SunIcon } from '@phosphor-icons/react';
 import { Link } from 'react-router-dom';
 import useTheme from '../hooks/useTheme';
 import { CURL_ANGLE_MAX, CURL_ANGLE_MIN, CURL_STILL_ANGLE, curlProgress } from '../utils/curlMotion';
@@ -9,7 +9,7 @@ import { cx, getRisk } from '../utils/format';
 export function ThemeToggle({ glass = false, className = '' }) {
   const { theme, toggleTheme } = useTheme();
   const label = theme === 'dark' ? 'Switch to light mode' : 'Switch to dark mode';
-  const Icon = theme === 'dark' ? Sun : Moon;
+  const Icon = theme === 'dark' ? SunIcon : MoonIcon;
   return (
     <button
       type="button"
@@ -17,12 +17,12 @@ export function ThemeToggle({ glass = false, className = '' }) {
       aria-label={label}
       title={label}
       className={cx(
-        'grid size-10 shrink-0 place-items-center rounded-full transition-colors',
+        'grid size-10 shrink-0 place-items-center rounded-full transition-[background-color,color,transform] duration-300 ease-fluid active:scale-[0.98]',
         glass ? 'border border-white/50 bg-white/10 text-white backdrop-blur-md hover:bg-white/20' : 'bg-surface text-ink-2 hover:text-ink',
         className,
       )}
     >
-      <Icon className="size-4" aria-hidden />
+      <Icon className="size-4" weight="bold" aria-hidden />
     </button>
   );
 }
@@ -77,7 +77,7 @@ export function Logo({ to = '/', className = '', inverted = false }) {
     <Link
       to={to}
       aria-label="FitMon home"
-      className={cx('headline inline-flex items-center gap-2 text-[22px] leading-none tracking-[-0.04em]', inverted ? 'text-white' : 'text-ink', className)}
+      className={cx('headline inline-flex items-center gap-2 text-xl leading-none tracking-[-0.04em]', inverted ? 'text-white' : 'text-ink', className)}
     >
       <LogoMark inverted={inverted} />
       <LogoWordmark inverted={inverted} />
@@ -314,7 +314,7 @@ export function CurlDiagram({ className = '', inverted = false }) {
         <circle key={i} cx={joint.x} cy={joint.y} r="7" fill={bg} stroke={ink} strokeWidth="2.5" />
       ))}
 
-      <g fontFamily="'Inter Tight', sans-serif" fill={ink} style={{ fontVariantNumeric: 'tabular-nums' }}>
+      <g fontFamily="'Geist', sans-serif" fill={ink} style={{ fontVariantNumeric: 'tabular-nums' }}>
         <line x1="12" y1="100" x2="152" y2="100" stroke={ink} strokeWidth="0.75" />
         <text x="12" y="90" fontSize="20" fill={note}>Shoulder drift</text>
         <text x="12" y="145" fontSize="44" fontWeight="300" letterSpacing="-1.5">{Math.max(1, Math.round(drift))}°</text>
@@ -325,7 +325,7 @@ export function CurlDiagram({ className = '', inverted = false }) {
 
         <line x1="298" y1="412" x2="460" y2="412" stroke={ink} strokeWidth="0.75" />
         <text x="298" y="402" fontSize="20" fill={note}>Range</text>
-        <text x="298" y="456" fontSize="38" fontWeight="300" letterSpacing="-1.5">38-152°</text>
+        <text x="298" y="456" fontSize="38" fontWeight="300" letterSpacing="-1.5">38 to 152°</text>
       </g>
     </svg>
   );

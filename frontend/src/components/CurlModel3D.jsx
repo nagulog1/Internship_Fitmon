@@ -12,7 +12,7 @@ const TARGET = { x: 2.05, y: -2.35, z: 0 };
 
 const THEMES = {
   light: { arm: '#0e1013', body: '#c9ced2', shoulder: '#ffffff', line: '#0e1013' },
-  dark: { arm: '#eef0f1', body: '#3b4046', shoulder: '#1a1d21', line: '#eef0f1' },
+  dark: { arm: '#eef0f1', body: '#3b4046', shoulder: '#181818', line: '#eef0f1' },
 };
 const VOLT = '#def52b';
 
@@ -64,7 +64,7 @@ export default function CurlModel3D({ className = '' }) {
       >
         <Readout className="top-[13%] left-0" label="Shoulder drift" valueRef={driftRef} initial="1°" />
         <Readout className="top-[44%] left-0" label="Elbow angle" valueRef={angleRef} initial="152°" />
-        <Readout className="right-0 bottom-0 text-right" label="Range" initial={`${CURL_ANGLE_MIN}-${CURL_ANGLE_MAX}°`} />
+        <Readout className="right-0 bottom-0 text-right" label="Range" initial={`${CURL_ANGLE_MIN} to ${CURL_ANGLE_MAX}°`} />
       </div>
     </div>
   );
@@ -73,8 +73,8 @@ export default function CurlModel3D({ className = '' }) {
 function Readout({ className, label, valueRef, initial }) {
   return (
     <div className={cx('absolute', className)}>
-      <p className="text-[10px] text-muted">{label}</p>
-      <p ref={valueRef} className="stat text-[22px]">{initial}</p>
+      <p className="caption-5 text-muted">{label}</p>
+      <p ref={valueRef} className="stat text-xl">{initial}</p>
     </div>
   );
 }

@@ -1,7 +1,7 @@
 import { useCallback, useState } from 'react';
 
 const STORAGE_KEY = 'fitmon-theme';
-const THEME_COLORS = { light: '#eceeed', dark: '#111316' };
+const THEME_COLORS = { light: '#eceeed', dark: '#000000' };
 
 // index.html sets data-theme before first paint, so this only has to read it back.
 export default function useTheme() {

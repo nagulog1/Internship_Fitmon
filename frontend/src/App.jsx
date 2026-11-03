@@ -7,6 +7,7 @@ import History from './pages/History';
 import LandingPage from './pages/LandingPage';
 import Login from './pages/Login';
 import Mentor from './pages/Mentor';
+import NotFound from './pages/NotFound';
 import Profile from './pages/Profile';
 import Report from './pages/Report';
 import Session from './pages/Session';
@@ -37,6 +38,8 @@ export default function App() {
             <Route path="/mentor" element={<Mentor />} />
           </Route>
         </Route>
+
+        <Route path="*" element={<NotFound />} />
       </Routes>
     </BrowserRouter>
   );
