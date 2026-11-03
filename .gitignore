@@ -5,8 +5,10 @@ node_modules/
 npm-debug.log*
 yarn-debug.log*
 
-# environment variables
+# environment variables (the .env.example templates are committed)
 .env
+.env.*
+!.env.example
 
 # build files
 dist/
@@ -19,7 +21,12 @@ Thumbs.db
 # VS Code
 .vscode/
 
-# backend
+# backend: Firebase admin keys
 backend/service-account.json
-*.json
-.env
+backend/serviceAccountKey.json
+
+# frontend: old photos showing another company's band, kept locally only
+frontend/old-landing-photos/
+
+# browser-testing screenshots and logs
+.playwright-mcp/

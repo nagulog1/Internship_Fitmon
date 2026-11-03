@@ -26,7 +26,7 @@ export default function Mentor() {
           <p className="px-3 pt-3 pb-2 text-sm text-ink-2">Inbox</p>
           <ul className="flex flex-col gap-1">
             {threads.map((thread) => (
-              <li key={thread.title} className={cx('flex items-center justify-between rounded-full px-4 py-2.5 text-sm', thread.active ? 'bg-ink text-white' : 'text-ink-2')}>
+              <li key={thread.title} className={cx('flex items-center justify-between rounded-full px-4 py-2.5 text-sm', thread.active ? 'bg-ink text-on-ink' : 'text-ink-2')}>
                 {thread.title}
                 <span className={cx('text-xs', thread.active ? 'text-volt' : 'text-muted')}>{thread.meta}</span>
               </li>

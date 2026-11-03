@@ -115,7 +115,7 @@ export default function WebcamFeed() {
   const phase = PHASE_LABELS[repState] || 'Idle';
 
   return (
-    <div className="relative isolate aspect-[4/3] w-full overflow-hidden rounded-[4px] bg-ink text-white sm:aspect-video">
+    <div className="relative isolate aspect-[4/3] w-full overflow-hidden rounded-[4px] bg-panel text-white sm:aspect-video">
       <Webcam
         ref={webcamRef}
         audio={false}
@@ -138,7 +138,7 @@ export default function WebcamFeed() {
       <div className="photo-scrim absolute inset-0 -z-10" aria-hidden />
 
       {cameraError ? (
-        <div className="absolute inset-0 flex items-end bg-ink/85 p-6 sm:p-8">
+        <div className="absolute inset-0 flex items-end bg-panel/85 p-6 sm:p-8">
           <div className="max-w-md">
             <p className="headline text-5xl">Camera unavailable</p>
             <p className="mt-4 text-sm text-white/80">{cameraError}</p>
@@ -150,7 +150,7 @@ export default function WebcamFeed() {
         <span className="text-white/85">{sessionActive ? 'Recording' : 'Live camera'}</span>
         {sessionActive ? (
           <span className="tag tag-volt">
-            <span className="size-1.5 animate-pulse-soft rounded-full bg-ink" /> Rec
+            <span className="size-1.5 animate-pulse-soft rounded-full bg-on-volt" /> Rec
           </span>
         ) : (
           <span className="text-white/85">Bicep curl</span>

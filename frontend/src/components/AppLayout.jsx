@@ -6,7 +6,7 @@ import { auth } from '../firebase/config';
 import useAuthStore from '../store/useAuthStore';
 import useSessionStore from '../stores/useSessionStore';
 import { cx } from '../utils/format';
-import { Logo } from './ui';
+import { Logo, ThemeToggle } from './ui';
 
 const TRAINEE_LINKS = [
   { label: 'Home', to: '/dashboard', icon: House },
@@ -49,7 +49,7 @@ export default function AppLayout() {
                 key={link.to}
                 to={link.to}
                 className={({ isActive }) =>
-                  cx('flex h-9 items-center gap-2 rounded-full px-4 text-[13px] transition-colors', isActive ? 'bg-ink text-white' : 'text-ink-2 hover:text-ink')
+                  cx('flex h-9 items-center gap-2 rounded-full px-4 text-[13px] transition-colors', isActive ? 'bg-ink text-on-ink' : 'text-ink-2 hover:text-ink')
                 }
               >
                 {link.label}
@@ -67,6 +67,7 @@ export default function AppLayout() {
             <span className="hidden size-10 place-items-center rounded-full bg-surface text-xs font-medium lg:grid" title={user?.name}>
               {initialsOf(user?.name)}
             </span>
+            <ThemeToggle />
             <button type="button" onClick={handleLogout} className="grid size-10 place-items-center rounded-full bg-surface text-ink-2 hover:text-ink" aria-label="Log out" title="Log out">
               <LogOut className="size-4" />
             </button>
@@ -79,14 +80,14 @@ export default function AppLayout() {
       </main>
 
       {links.length > 1 ? (
-        <nav aria-label="Main" className="fixed inset-x-3 bottom-3 z-30 rounded-full bg-ink p-1.5 shadow-xl md:hidden" style={{ marginBottom: 'env(safe-area-inset-bottom)' }}>
+        <nav aria-label="Main" className="fixed inset-x-3 bottom-3 z-30 rounded-full bg-panel p-1.5 shadow-xl md:hidden" style={{ marginBottom: 'env(safe-area-inset-bottom)' }}>
           <div className="grid grid-cols-5">
             {links.map((link) => (
               <NavLink
                 key={link.to}
                 to={link.to}
                 className={({ isActive }) =>
-                  cx('flex h-12 flex-col items-center justify-center gap-0.5 rounded-full text-[10px] transition-colors', isActive ? 'bg-volt text-ink' : 'text-white/65')
+                  cx('flex h-12 flex-col items-center justify-center gap-0.5 rounded-full text-[10px] transition-colors', isActive ? 'bg-volt text-on-volt' : 'text-white/65')
                 }
               >
                 {createElement(link.icon, { className: 'size-[18px]', strokeWidth: 1.75, 'aria-hidden': true })}

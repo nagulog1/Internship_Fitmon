@@ -108,7 +108,7 @@ export default function ReportPage() {
 
       {/* Headline */}
       <section className="grid gap-3 lg:grid-cols-[1fr_1fr_1fr]" aria-label="Headline scores">
-        <div className="relative isolate flex min-h-[260px] flex-col justify-between overflow-hidden rounded-[4px] bg-ink p-6 text-white">
+        <div className="relative isolate flex min-h-[260px] flex-col justify-between overflow-hidden rounded-[4px] bg-panel p-6 text-white">
           <p className="text-sm text-white/75">Grade</p>
           <div className="flex items-end justify-between gap-4">
             <span className="stat text-[150px] leading-[0.75] text-volt">{grade}</span>
@@ -272,7 +272,7 @@ function RepPerformanceChart({ reps }) {
     <svg viewBox={`0 0 ${CHART_WIDTH} ${CHART_HEIGHT}`} className="h-auto w-full" role="img" aria-label="Line chart of form, pressure and consistency scores for each rep">
       {[0, 25, 50, 75, 100].map((tick) => (
         <g key={tick}>
-          <line x1={left} x2={CHART_WIDTH - right} y1={yAt(tick)} y2={yAt(tick)} stroke="rgb(14 16 19 / 0.08)" />
+          <line x1={left} x2={CHART_WIDTH - right} y1={yAt(tick)} y2={yAt(tick)} stroke="var(--color-line)" />
           <text x={left - 8} y={yAt(tick) + 4} fill="var(--color-muted)" fontSize="11" textAnchor="end">{tick}</text>
         </g>
       ))}
@@ -286,9 +286,9 @@ function RepPerformanceChart({ reps }) {
       {reps.map((rep, index) => (
         <g key={rep.repNumber}>
           {rep.correct ? (
-            <circle cx={xAt(index)} cy={yAt(rep.formScore ?? 0)} r="4" fill="#ffffff" stroke="var(--color-ink)" strokeWidth="2" />
+            <circle cx={xAt(index)} cy={yAt(rep.formScore ?? 0)} r="4" fill="var(--color-surface)" stroke="var(--color-ink)" strokeWidth="2" />
           ) : (
-            <circle cx={xAt(index)} cy={yAt(rep.formScore ?? 0)} r="5.5" fill="var(--color-bad)" stroke="#ffffff" strokeWidth="2" />
+            <circle cx={xAt(index)} cy={yAt(rep.formScore ?? 0)} r="5.5" fill="var(--color-bad)" stroke="var(--color-surface)" strokeWidth="2" />
           )}
           <text x={xAt(index)} y={CHART_HEIGHT - 6} textAnchor="middle" fill="var(--color-muted)" fontSize="11">{rep.repNumber}</text>
         </g>

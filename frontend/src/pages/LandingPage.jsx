@@ -1,32 +1,17 @@
 import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
-import { Menu, X } from 'lucide-react';
+import { Menu, Pause, Play, X } from 'lucide-react';
 import { API_BASE_URL } from '../services/apiClient';
 import useAuthStore from '../store/useAuthStore';
-import { CornerArrow, CurlDiagram, Logo } from '../components/ui';
+import CurlModel3D from '../components/CurlModel3D';
+import { CornerArrow, Logo, LogoMark, LogoWordmark, RiskScale, ThemeToggle } from '../components/ui';
 import { cx } from '../utils/format';
 
-const specs = [
-  { value: '92%', caption: 'Form clarity' },
-  { value: '1.4k', caption: 'Sessions analysed' },
-  { value: '120ms', caption: 'Signal refresh' },
-  { value: '<200ms', caption: 'On-device feedback' },
-];
-
-const measures = [
-  { title: 'Posture', copy: 'Shoulder, elbow and wrist alignment, scored out of 100 on every frame.' },
-  { title: 'Range of motion', copy: 'Flags half reps. You see the angle you reached, not just a count.' },
-  { title: 'Elbow drift', copy: 'Notices when the elbow creeps forward to cheat the weight up.' },
-  { title: 'Tempo', copy: 'Picks up when you rush the lowering phase as fatigue sets in.' },
-  { title: 'Grip pressure', copy: 'With the FitMon band, load joins the picture to spot overload.' },
-  { title: 'Injury risk', copy: 'Rolls it all into one number you can actually act on.' },
-];
-
 const sampleRows = [
-  { rep: 9, range: '36–154°', form: 88, pressure: 52, flag: null },
-  { rep: 10, range: '37–152°', form: 84, pressure: 55, flag: null },
-  { rep: 11, range: '44–149°', form: 61, pressure: 58, flag: 'Elbow forward' },
-  { rep: 12, range: '51–141°', form: 47, pressure: 81, flag: 'Pressure spike' },
+  { rep: 9, range: '36-154°', form: 88, pressure: 52, flag: null },
+  { rep: 10, range: '37-152°', form: 84, pressure: 55, flag: null },
+  { rep: 11, range: '44-149°', form: 61, pressure: 58, flag: 'Elbow forward' },
+  { rep: 12, range: '51-141°', form: 47, pressure: 81, flag: 'Pressure spike' },
 ];
 
 const steps = [
@@ -34,6 +19,14 @@ const steps = [
   { title: 'Curl', desc: 'Press start and train. Cues appear the moment your form slips.' },
   { title: 'Review', desc: 'End the set and FitMon writes a report with a grade and what to fix.' },
   { title: 'Improve', desc: 'History shows whether your form is trending up, session by session.' },
+];
+
+const heroPhotos = [
+  { src: '/landing/hero/arm-dumbbell.jpg', alt: '' },
+  { src: '/landing/hero/bench-press.jpg', alt: '' },
+  { src: '/landing/hero/curl-bw.jpg', alt: '' },
+  { src: '/landing/hero/wristband.jpg', alt: '' },
+  { src: '/landing/hero/tracker.jpg', alt: '' },
 ];
 
 const navLinks = [
@@ -46,10 +39,20 @@ const navLinks = [
 export default function LandingPage() {
   const user = useAuthStore((state) => state.user);
   const primaryHref = user ? '/dashboard' : '/login';
+  // One label for the sign-up intent everywhere on the page.
+  const primaryLabel = user ? 'Open app' : 'Start training';
   const [menuOpen, setMenuOpen] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [contactStatus, setContactStatus] = useState(null);
   const [contactForm, setContactForm] = useState({ name: '', email: '', organization: '', message: '' });
+  const [heroPaused, setHeroPaused] = useState(false);
+  const [heroIndex, setHeroIndex] = useState(0);
+
+  useEffect(() => {
+    if (heroPaused) return undefined;
+    const timer = window.setInterval(() => setHeroIndex((i) => (i + 1) % heroPhotos.length), 5000);
+    return () => window.clearInterval(timer);
+  }, [heroPaused]);
 
   useEffect(() => {
     if (!menuOpen) return undefined;
@@ -106,13 +109,19 @@ export default function LandingPage() {
   return (
     <div className="min-h-screen overflow-x-hidden bg-canvas" id="top">
       {/* ── HERO ── */}
-      <section className="relative isolate flex min-h-[100svh] flex-col overflow-hidden bg-ink text-white">
-        <img
-          src="/landing/hero.jpg"
-          alt="Athlete wearing the FitMon band on their wrist"
-          className="absolute inset-0 -z-20 size-full object-cover object-[60%_35%]"
-          fetchPriority="high"
-        />
+      <section className="relative isolate flex min-h-[100dvh] flex-col overflow-hidden bg-panel text-white">
+        {/* All photos stay mounted so each swap is instant; only the current one is visible. */}
+        <div className="absolute inset-0 -z-20 brightness-[0.8]" aria-hidden>
+          {heroPhotos.map((photo, i) => (
+            <img
+              key={photo.src}
+              src={photo.src}
+              alt=""
+              fetchPriority={i === 0 ? 'high' : undefined}
+              className={cx('absolute inset-0 size-full object-cover', i !== heroIndex && 'invisible')}
+            />
+          ))}
+        </div>
         <div className="photo-scrim absolute inset-0 -z-10" aria-hidden />
 
         {/* Nav */}
@@ -126,16 +135,28 @@ export default function LandingPage() {
                 </a>
               ))}
             </nav>
-            <div className="hidden items-center gap-3 lg:flex">
-              {!user ? <Link to="/login" className="btn btn-sm btn-glass">Sign in</Link> : null}
-              <Link to={primaryHref} className="btn btn-sm btn-volt-flat">{user ? 'Open app' : 'Get started'}</Link>
+            <div className="flex items-center gap-3">
+              <button
+                type="button"
+                onClick={() => setHeroPaused((paused) => !paused)}
+                aria-label={heroPaused ? 'Play background photos' : 'Pause background photos'}
+                title={heroPaused ? 'Play background photos' : 'Pause background photos'}
+                className="grid size-10 shrink-0 place-items-center rounded-full border border-white/50 bg-white/10 text-white backdrop-blur-md transition-colors hover:bg-white/20"
+              >
+                {heroPaused ? <Play className="size-4" aria-hidden /> : <Pause className="size-4" aria-hidden />}
+              </button>
+              <ThemeToggle glass />
+              <div className="hidden items-center gap-3 lg:flex">
+                {!user ? <Link to="/login" className="btn btn-sm btn-glass">Sign in</Link> : null}
+                <Link to={primaryHref} className="btn btn-sm btn-volt-flat">{primaryLabel}</Link>
+              </div>
+              <button type="button" className="grid size-11 place-items-center rounded-full border border-white/40 bg-white/10 backdrop-blur-md lg:hidden" onClick={() => setMenuOpen((v) => !v)} aria-expanded={menuOpen} aria-label="Menu">
+                {menuOpen ? <X className="size-5" /> : <Menu className="size-5" />}
+              </button>
             </div>
-            <button type="button" className="grid size-11 place-items-center rounded-full border border-white/40 bg-white/10 backdrop-blur-md lg:hidden" onClick={() => setMenuOpen((v) => !v)} aria-expanded={menuOpen} aria-label="Menu">
-              {menuOpen ? <X className="size-5" /> : <Menu className="size-5" />}
-            </button>
           </div>
           {menuOpen ? (
-            <div className="mx-5 rounded-[4px] bg-white p-5 text-ink shadow-2xl lg:hidden">
+            <div className="mx-5 rounded-[4px] bg-surface p-5 text-ink shadow-2xl lg:hidden">
               <nav className="flex flex-col" aria-label="Mobile">
                 {navLinks.map((link) => (
                   <a key={link.href} href={link.href} onClick={() => setMenuOpen(false)} className="headline border-b border-line py-4 text-3xl">
@@ -143,133 +164,119 @@ export default function LandingPage() {
                   </a>
                 ))}
               </nav>
-              <div className="mt-5 grid grid-cols-2 gap-3">
-                <Link to="/login" className="btn btn-outline">Sign in</Link>
-                <Link to={primaryHref} className="btn btn-volt-flat">Get started</Link>
+              <div className={cx('mt-5 grid gap-3', !user && 'grid-cols-2')}>
+                {!user ? <Link to="/login" className="btn btn-outline">Sign in</Link> : null}
+                <Link to={primaryHref} className="btn btn-volt-flat">{primaryLabel}</Link>
               </div>
             </div>
           ) : null}
         </header>
 
-        <div className="relative mx-auto grid w-full max-w-[1320px] flex-1 grid-cols-1 px-5 pt-6 pb-8 sm:px-8 lg:grid-cols-[200px_1fr_260px] lg:gap-6">
-          <p className="hidden text-sm text-white/75 lg:block">Built for the gym floor</p>
-
-          <div className="animate-rise">
-            <h1 className="headline text-[64px] sm:text-[112px] xl:text-[150px]">
-              Every rep
+        <div className="relative mx-auto flex w-full max-w-[1320px] flex-1 flex-col justify-end gap-12 px-5 pt-10 pb-12 sm:px-8 lg:flex-row lg:items-end lg:justify-between lg:pb-16">
+          <div className="min-w-0 animate-rise">
+            <h1 className="headline text-[40px] sm:text-[64px] md:text-[80px] xl:text-[112px]">
+              Every rep,
               <br />
-              on the
-              <br />
-              rec<span className="text-volt">/</span>ord
+              on the rec<span className="text-volt">/</span>ord
             </h1>
-            <p className="mt-6 max-w-[260px] text-[15px] leading-snug text-white/90">
-              Form coaching from the camera you already have.
+            <p className="mt-6 max-w-sm text-[17px] leading-snug text-white/90">
+              Point any webcam at your arm. FitMon scores every curl and tells you what to fix.
             </p>
-            <Link to={primaryHref} className="btn btn-volt mt-10">
-              Start a session
-            </Link>
-          </div>
-
-          <div className="mt-12 flex flex-col justify-between gap-8 lg:mt-0">
-            <div className="hidden text-right lg:block">
-              <p className="text-sm text-white/75">Works with</p>
-              <p className="mt-2 text-lg font-medium tracking-tight">Any webcam · FSR band</p>
-            </div>
-
-            <a href="#measures" className="group card relative block w-full max-w-[260px] self-end p-5 text-ink lg:self-auto">
-              <div className="flex items-start justify-between">
-                <p className="text-[15px] font-medium">Form in motion</p>
-                <CornerArrow className="transition-transform group-hover:translate-x-0.5 group-hover:-translate-y-0.5" />
-              </div>
-              <CurlDiagram className="mt-3 w-full" />
-            </a>
-          </div>
-        </div>
-
-        {/* Hero footer */}
-        <div className="relative mx-auto grid w-full max-w-[1320px] gap-8 px-5 pb-10 sm:px-8 md:grid-cols-[1fr_auto] md:items-end lg:pl-[calc(200px+1.5rem+2rem)]">
-          <div>
-            <p className="lede max-w-xl text-[28px] sm:text-[38px]">Scores your posture on every rep, and tells you what to fix.</p>
-            <a href="#measures" className="link-volt mt-5">Learn more</a>
-          </div>
-          <div className="flex items-stretch gap-8">
-            <span className="hidden w-px bg-white/40 md:block" aria-hidden />
-            <div className="pr-4 text-center">
-              <p className="stat text-6xl">&lt;200ms</p>
-              <p className="mt-2 text-sm text-white/85">On-device feedback</p>
+            <div className="mt-10 flex flex-wrap items-center gap-x-8 gap-y-4">
+              <Link to={primaryHref} className="btn btn-volt">{primaryLabel}</Link>
+              <a href="#how" className="link-volt">How it works</a>
             </div>
           </div>
+
+          <a href="#measures" className="group card hidden w-[260px] shrink-0 p-5 text-ink md:block">
+            <div className="flex items-start justify-between">
+              <p className="text-[15px] font-medium">Form in motion</p>
+              <CornerArrow className="transition-transform group-hover:translate-x-0.5 group-hover:-translate-y-0.5" />
+            </div>
+            <CurlModel3D className="mt-3 w-full" />
+          </a>
         </div>
       </section>
 
       {/* ── INTRO STATEMENT ── */}
       <section className="mx-auto max-w-[1320px] px-5 py-24 sm:px-8 lg:py-36">
-        <p className="kicker">About FitMon</p>
-        <p className="lede mt-8 max-w-5xl text-[34px] sm:text-[52px]">
+        <p className="lede max-w-5xl text-[32px] sm:text-[52px]">
           FitMon watches your bicep curls through your webcam, scores every rep, and flags drift{' '}
           <span className="text-muted">before it turns into a sore elbow. No suit, no markers, no guesswork.</span>
         </p>
-        <dl className="mt-20 grid grid-cols-2 gap-y-10 border-t border-line pt-10 lg:grid-cols-4">
-          {specs.map((spec, i) => (
-            <div key={spec.caption} className={cx('pr-6', i > 0 && 'lg:border-l lg:border-line lg:pl-8', i % 2 === 1 && 'border-l border-line pl-6')}>
-              <dd className="stat text-6xl sm:text-7xl">{spec.value}</dd>
-              <dt className="mt-3 text-sm text-ink-2">{spec.caption}</dt>
-            </div>
-          ))}
-        </dl>
       </section>
 
       {/* ── WHAT IT MEASURES ── */}
-      <section id="measures" className="scroll-mt-4 bg-surface">
-        <div className="mx-auto grid max-w-[1320px] gap-14 px-5 py-24 sm:px-8 lg:grid-cols-[1fr_1.15fr] lg:py-32">
-          <div className="relative min-h-[460px] overflow-hidden rounded-[4px] bg-ink lg:sticky lg:top-6 lg:h-[calc(100vh-3rem)] lg:max-h-[720px]">
-            <img src="/landing/band-closeup.jpg" alt="Close-up of the FitMon band" loading="lazy" className="absolute inset-0 size-full object-cover" />
-            <div className="photo-scrim absolute inset-0" aria-hidden />
-            <div className="absolute inset-x-0 bottom-0 p-8 text-white">
-              <p className="text-sm text-white/80">What it measures</p>
-              <p className="headline mt-4 text-5xl sm:text-6xl">Six signals.<br />One score.</p>
-            </div>
-          </div>
+      <section id="measures" className="mx-auto max-w-[1320px] scroll-mt-4 px-5 pb-24 sm:px-8 lg:pb-32">
+        <p className="kicker">What it measures</p>
+        <h2 className="headline mt-6 text-[44px] sm:text-[64px]">Six signals.<br />One score.</h2>
 
-          <ol className="flex flex-col">
-            {measures.map((item, i) => (
-              <li key={item.title} className="grid grid-cols-[48px_1fr] gap-4 border-b border-line py-8 first:pt-0">
-                <span className="pt-2 text-sm text-muted tabular-nums">{String(i + 1).padStart(2, '0')}</span>
-                <div>
-                  <h3 className="lede text-[32px] sm:text-[40px]">{item.title}</h3>
-                  <p className="mt-3 max-w-md text-base leading-relaxed text-ink-2">{item.copy}</p>
-                </div>
-              </li>
-            ))}
-          </ol>
+        <div className="mt-14 grid gap-3 sm:grid-cols-2 lg:grid-cols-6">
+          <MeasureTile
+            title="Posture"
+            copy="Shoulder, elbow and wrist alignment, scored out of 100 on every frame."
+            photo={{ src: '/landing/hero/arm-dumbbell.jpg', alt: 'Arm curling a dumbbell' }}
+            className="sm:col-span-2 lg:col-span-4 lg:min-h-[400px]"
+          />
+          <MeasureTile
+            title="Range of motion"
+            copy="Flags half reps. You see the angle you reached, not just a count."
+            tone="volt"
+            className="lg:col-span-2"
+          />
+          <MeasureTile
+            title="Elbow drift"
+            copy="Notices when the elbow creeps forward to cheat the weight up."
+            className="lg:col-span-2"
+          />
+          <MeasureTile
+            title="Tempo"
+            copy="Picks up when you rush the lowering phase as fatigue sets in."
+            className="lg:col-span-2"
+          />
+          <MeasureTile
+            title="Grip pressure"
+            copy="With the FitMon band, load joins the picture to spot overload."
+            photo={{ src: '/landing/hero/tracker.jpg', alt: 'Person checking a fitness tracker on their wrist' }}
+            className="lg:col-span-2"
+          />
+          <MeasureTile
+            title="Injury risk"
+            copy="Rolls it all into one number you can actually act on."
+            className="sm:col-span-2 lg:col-span-6 lg:min-h-0"
+            aside={
+              <div>
+                <RiskScale score={62} />
+                <p className="mt-4 text-xs text-muted">Sample score from a tiring set</p>
+              </div>
+            }
+          />
         </div>
       </section>
 
-      {/* ── READOUT (dark) ── */}
-      <section className="bg-ink text-white">
+      {/* ── READOUT ── */}
+      <section className="bg-surface">
         <div className="mx-auto grid max-w-[1320px] gap-14 px-5 py-24 sm:px-8 lg:grid-cols-[1fr_1.2fr] lg:py-32">
           <div>
-            <p className="text-sm text-white/65">Why it matters</p>
-            <h2 className="headline mt-6 text-[52px] sm:text-[76px]">
+            <h2 className="headline text-[44px] sm:text-[64px]">
               Catch the
               <br />
-              drift <span className="text-volt">early</span>
+              drift <span className="text-volt-deep">early</span>
             </h2>
-            <p className="mt-8 max-w-md text-[17px] leading-relaxed text-white/75">
+            <p className="mt-8 max-w-md text-[17px] leading-relaxed text-ink-2">
               Form rarely breaks all at once. It slides a few degrees at a time as you tire. FitMon logs every rep so you can see
               exactly where the set started to go.
             </p>
-            <Link to={primaryHref} className="btn btn-volt mt-10 outline-white/40">Log your first set</Link>
           </div>
 
           <div className="self-end">
-            <div className="flex items-baseline justify-between border-b border-white/20 pb-4 text-sm text-white/65">
-              <span>Sample readout · last four reps</span>
-              <span>Bicep curl · 12 kg</span>
+            <div className="flex items-baseline justify-between border-b border-line-strong pb-4 text-sm text-muted">
+              <span>Sample readout, last four reps</span>
+              <span>Bicep curl, 12 kg</span>
             </div>
             <table className="w-full text-left tabular-nums">
               <thead>
-                <tr className="text-xs text-white/55">
+                <tr className="text-xs text-muted">
                   <th scope="col" className="py-4 pr-3 font-normal">Rep</th>
                   <th scope="col" className="py-4 pr-3 font-normal">Range</th>
                   <th scope="col" className="py-4 pr-3 font-normal">Form</th>
@@ -279,13 +286,13 @@ export default function LandingPage() {
               </thead>
               <tbody>
                 {sampleRows.map((row) => (
-                  <tr key={row.rep} className="border-t border-white/12">
+                  <tr key={row.rep} className="border-t border-line">
                     <td className="stat py-5 pr-3 text-4xl">{row.rep}</td>
-                    <td className="py-5 pr-3 text-white/75">{row.range}</td>
-                    <td className={cx('stat py-5 pr-3 text-4xl', row.form < 60 && 'text-volt')}>{row.form}</td>
-                    <td className="hidden py-5 pr-3 text-white/75 sm:table-cell">{row.pressure}</td>
+                    <td className="py-5 pr-3 text-ink-2">{row.range}</td>
+                    <td className={cx('stat py-5 pr-3 text-4xl', row.form < 60 && 'text-bad')}>{row.form}</td>
+                    <td className="hidden py-5 pr-3 text-ink-2 sm:table-cell">{row.pressure}</td>
                     <td className="py-5 text-right">
-                      {row.flag ? <span className="tag tag-volt">{row.flag}</span> : <span className="text-sm text-white/45">Clean</span>}
+                      {row.flag ? <span className="tag tag-volt">{row.flag}</span> : <span className="text-sm text-muted">Clean</span>}
                     </td>
                   </tr>
                 ))}
@@ -297,61 +304,60 @@ export default function LandingPage() {
 
       {/* ── HOW IT WORKS ── */}
       <section id="how" className="mx-auto max-w-[1320px] scroll-mt-4 px-5 py-24 sm:px-8 lg:py-32">
-        <div className="flex flex-col gap-6 md:flex-row md:items-end md:justify-between">
-          <div>
-            <p className="kicker">How it works</p>
-            <h2 className="headline mt-6 text-[52px] sm:text-[76px]">One set.<br />One report.</h2>
-          </div>
-          <p className="max-w-sm text-base text-ink-2">No wearables required. The band adds pressure data if you have one.</p>
-        </div>
-        <ol className="mt-16 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
-          {steps.map((step, i) => (
-            <li key={step.title} className="card flex min-h-[260px] flex-col justify-between p-7">
-              <span className="stat text-[72px] text-ink/15">0{i + 1}</span>
-              <div>
-                <h3 className="text-xl font-medium tracking-tight">{step.title}</h3>
-                <p className="mt-2 text-[15px] leading-relaxed text-ink-2">{step.desc}</p>
-              </div>
+        <h2 className="headline text-[44px] sm:text-[64px]">One set.<br />One report.</h2>
+        <p className="mt-6 max-w-[65ch] text-base leading-relaxed text-ink-2">
+          No install and no wearables: it runs in your browser. The band adds pressure data if you have one.
+        </p>
+        <ol className="mt-16 grid gap-x-8 gap-y-10 border-t border-line-strong pt-10 sm:grid-cols-2 lg:grid-cols-4">
+          {steps.map((step) => (
+            <li key={step.title}>
+              <h3 className="lede text-[28px] sm:text-[32px]">{step.title}</h3>
+              <p className="mt-3 text-[15px] leading-relaxed text-ink-2">{step.desc}</p>
             </li>
           ))}
         </ol>
       </section>
 
       {/* ── HARDWARE ── */}
-      <section id="hardware" className="relative isolate scroll-mt-4 overflow-hidden bg-ink text-white">
-        <img src="/landing/hero.jpg" alt="" loading="lazy" className="absolute inset-0 -z-20 size-full object-cover object-[70%_40%]" />
-        <div className="absolute inset-0 -z-10 bg-gradient-to-r from-ink/85 via-ink/50 to-transparent" aria-hidden />
-        <div className="mx-auto grid max-w-[1320px] gap-10 px-5 py-28 sm:px-8 lg:grid-cols-2 lg:py-40">
+      <section id="hardware" className="scroll-mt-4 bg-surface">
+        <div className="mx-auto grid max-w-[1320px] items-center gap-12 px-5 py-24 sm:px-8 lg:grid-cols-[1fr_1.1fr] lg:gap-20 lg:py-32">
           <div>
-            <p className="text-sm text-white/70">Optional hardware</p>
-            <h2 className="headline mt-6 text-[52px] sm:text-[76px]">The FitMon<br />band</h2>
-            <p className="mt-8 max-w-md text-[17px] leading-relaxed text-white/80">
+            <p className="kicker">Optional hardware</p>
+            <h2 className="headline mt-6 text-[44px] sm:text-[64px]">The FitMon<br />band</h2>
+            <p className="mt-8 max-w-md text-[17px] leading-relaxed text-ink-2">
               A lightweight force-sensor band streams grip load over Wi-Fi. Combined with the camera, FitMon can tell a heavy rep
               from a bad one.
             </p>
-            <dl className="mt-12 grid max-w-md grid-cols-3 gap-6 border-t border-white/25 pt-6">
+            <dl className="mt-12 grid max-w-md grid-cols-3 gap-6 border-t border-line pt-6">
               {[['Sensors', 'FSR array'], ['Link', 'ESP8266'], ['Build', 'Sweat-safe']].map(([k, v]) => (
                 <div key={k}>
-                  <dt className="text-xs text-white/60">{k}</dt>
+                  <dt className="text-xs text-muted">{k}</dt>
                   <dd className="mt-1.5 font-medium">{v}</dd>
                 </div>
               ))}
             </dl>
           </div>
+          <img
+            src="/landing/hero/wristband.jpg"
+            alt="A band worn on an athlete's wrist"
+            loading="lazy"
+            className="aspect-[4/5] w-full rounded-[4px] object-cover object-[50%_45%] lg:aspect-[5/6]"
+          />
         </div>
       </section>
 
       {/* ── CTA ── */}
-      <section className="mx-auto max-w-[1320px] px-5 py-24 sm:px-8 lg:py-36">
-        <div className="flex flex-col gap-10 lg:flex-row lg:items-end lg:justify-between">
-          <h2 className="headline text-[56px] sm:text-[96px] xl:text-[120px]">
-            Train with
-            <br />a second
-            <br />pair of eyes
-          </h2>
-          <div className="flex flex-wrap gap-3">
-            <Link to={primaryHref} className="btn btn-lg btn-volt-flat">Start training</Link>
-            <a href="#contact" className="btn btn-lg btn-outline">Book a demo</a>
+      <section className="mx-auto max-w-[1320px] px-5 py-24 sm:px-8 lg:py-32">
+        <div className="relative isolate flex min-h-[480px] flex-col justify-end overflow-hidden rounded-[4px] bg-panel p-8 text-white sm:p-12">
+          <img src="/landing/hero/bench-press.jpg" alt="" loading="lazy" className="absolute inset-0 -z-20 size-full object-cover" />
+          <div className="absolute inset-0 -z-10 bg-gradient-to-t from-panel/85 via-panel/35 to-transparent" aria-hidden />
+          <div className="flex flex-col gap-10 lg:flex-row lg:items-end lg:justify-between">
+            <h2 className="headline text-[44px] sm:text-[80px] xl:text-[104px]">
+              Train with
+              <br />a second
+              <br />pair of eyes
+            </h2>
+            <Link to={primaryHref} className="btn btn-lg btn-volt self-start lg:self-auto">{primaryLabel}</Link>
           </div>
         </div>
       </section>
@@ -360,10 +366,9 @@ export default function LandingPage() {
       <section id="contact" className="scroll-mt-4 bg-surface">
         <div className="mx-auto grid max-w-[1320px] gap-14 px-5 py-24 sm:px-8 lg:grid-cols-2 lg:py-32">
           <div>
-            <p className="kicker">For gyms, clinics &amp; teams</p>
-            <h2 className="headline mt-6 text-[52px] sm:text-[76px]">Let's talk</h2>
+            <h2 className="headline text-[44px] sm:text-[64px]">Let's talk</h2>
             <p className="mt-8 max-w-md text-[17px] leading-relaxed text-ink-2">
-              Tell us about your program and who you train. We reply within a day, usually sooner.
+              Run a gym, clinic or coaching team? Tell us about your program and who you train. We reply within a day.
             </p>
           </div>
 
@@ -395,18 +400,19 @@ export default function LandingPage() {
       </section>
 
       {/* ── FOOTER ── */}
-      <footer className="bg-ink text-white">
+      <footer className="border-t border-line bg-canvas">
         <div className="mx-auto max-w-[1320px] px-5 sm:px-8">
           <div className="flex flex-col gap-6 py-10 sm:flex-row sm:items-center sm:justify-between">
             <nav className="flex flex-wrap gap-x-8 gap-y-2 text-sm" aria-label="Footer">
               {navLinks.map((link) => (
-                <a key={link.href} href={link.href} className="text-white/70 hover:text-white">{link.label}</a>
+                <a key={link.href} href={link.href} className="text-ink-2 hover:text-ink">{link.label}</a>
               ))}
             </nav>
-            <p className="text-sm text-white/55">© {new Date().getFullYear()} FitMon. Training guidance, not medical advice.</p>
+            <p className="text-sm text-muted">© {new Date().getFullYear()} FitMon. Training guidance, not medical advice.</p>
           </div>
-          <p className="headline -mb-[0.1em] border-t border-white/15 pt-8 text-[24vw] leading-[0.8] lg:text-[300px]" aria-hidden>
-            Fit<span className="text-volt">/</span>Mon
+          <p className="headline flex items-center gap-[0.12em] border-t border-line pt-8 pb-[0.12em] text-[16vw] leading-[0.8] lg:text-[225px]" aria-hidden>
+            <LogoMark className="size-[0.95em]" />
+            <LogoWordmark />
           </p>
         </div>
       </footer>
@@ -414,9 +420,37 @@ export default function LandingPage() {
   );
 }
 
+const tileTones = {
+  plain: { tile: 'bg-surface text-ink', copy: 'text-ink-2' },
+  volt: { tile: 'bg-volt text-on-volt', copy: 'text-on-volt/75' },
+  photo: { tile: 'bg-panel text-white', copy: 'text-white/80' },
+};
+
+/** One cell of the "what it measures" grid. A photo tile keeps white type over a darkened image. */
+function MeasureTile({ title, copy, tone = 'plain', photo, aside, className = '' }) {
+  const style = tileTones[photo ? 'photo' : tone];
+  return (
+    <div className={cx('relative isolate flex min-h-[260px] flex-col justify-end overflow-hidden rounded-[4px] p-7', style.tile, className)}>
+      {photo ? (
+        <>
+          <img src={photo.src} alt={photo.alt} loading="lazy" className="absolute inset-0 -z-20 size-full object-cover" />
+          <div className="absolute inset-0 -z-10 bg-gradient-to-t from-panel/85 via-panel/25 to-transparent" aria-hidden />
+        </>
+      ) : null}
+      <div className={cx(aside && 'grid gap-8 lg:grid-cols-2 lg:items-end')}>
+        <div>
+          <h3 className="lede text-[28px] sm:text-[36px]">{title}</h3>
+          <p className={cx('mt-3 max-w-sm text-[15px] leading-relaxed', style.copy)}>{copy}</p>
+        </div>
+        {aside}
+      </div>
+    </div>
+  );
+}
+
 function Field({ label, htmlFor, className = '', children }) {
   return (
-    <div className={cx('flex flex-col', className)}>
+    <div className={cx('flex flex-col gap-2', className)}>
       <label htmlFor={htmlFor} className="text-sm text-muted">{label}</label>
       {children}
     </div>

@@ -135,7 +135,8 @@ const useProfileStore = create((set) => ({
   },
 
   updateGoal: async (uid, newGoal) => {
-    if (!db || !uid) return;
+    if (!db || !uid) return false;
+    set({ error: null });
     try {
       const userRef = doc(db, 'users', uid);
       try {
@@ -148,8 +149,10 @@ const useProfileStore = create((set) => ({
         }
       }
       set({ goal: newGoal });
+      return true;
     } catch (e) {
       set({ error: e.message });
+      return false;
     }
   }
 }));

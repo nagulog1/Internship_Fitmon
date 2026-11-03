@@ -11,7 +11,7 @@ export default function Profile() {
   const user = useAuthStore((state) => state.user);
   const {
     goal, streak, totalSessions, accuracyRate, recentSessions,
-    fetchProfileMetrics, updateGoal, isLoading,
+    fetchProfileMetrics, updateGoal, isLoading, error,
   } = useProfileStore();
 
   const [isEditingGoal, setIsEditingGoal] = useState(false);
@@ -23,8 +23,8 @@ export default function Profile() {
 
   const handleSaveGoal = async (event) => {
     event?.preventDefault();
-    if (user?.uid) await updateGoal(user.uid, goalInput);
-    setIsEditingGoal(false);
+    const saved = user?.uid ? await updateGoal(user.uid, goalInput) : false;
+    if (saved) setIsEditingGoal(false);
   };
 
   const initials = user?.name
@@ -37,7 +37,7 @@ export default function Profile() {
 
       <div className="grid gap-3 lg:grid-cols-[320px_1fr]">
         <aside className="card flex flex-col p-6">
-          <div className="grid size-20 place-items-center rounded-full bg-ink text-2xl font-medium text-white">{initials}</div>
+          <div className="grid size-20 place-items-center rounded-full bg-ink text-2xl font-medium text-on-ink">{initials}</div>
           <dl className="mt-10 text-sm">
             <div className="flex justify-between gap-4 border-b border-line py-3">
               <dt className="text-ink-2">Email</dt>
@@ -73,6 +73,8 @@ export default function Profile() {
             <p className={cx('headline mt-8', goal ? 'text-[48px] sm:text-[64px]' : 'text-4xl text-muted')}>{goal || 'No goal yet'}</p>
           )}
 
+          {error ? <p role="alert" className="mt-4 text-sm text-bad">Couldn't reach your profile data: {error}</p> : null}
+
           <div className="mt-8 flex flex-wrap items-center gap-2">
             <span className="text-sm text-muted">Try</span>
             {GOAL_SUGGESTIONS.map((suggestion) => (
@@ -80,7 +82,7 @@ export default function Profile() {
                 key={suggestion}
                 type="button"
                 onClick={() => { setGoalInput(suggestion); setIsEditingGoal(true); }}
-                className="tag tag-plain h-8 px-3.5 hover:bg-ink hover:text-white"
+                className="tag tag-plain h-8 px-3.5 hover:bg-ink hover:text-on-ink"
               >
                 {suggestion}
               </button>
@@ -90,7 +92,7 @@ export default function Profile() {
       </div>
 
       <dl className="mt-3 grid grid-cols-1 gap-3 sm:grid-cols-3">
-        <div className="relative isolate overflow-hidden rounded-[4px] bg-ink p-6 text-white">
+        <div className="relative isolate overflow-hidden rounded-[4px] bg-panel p-6 text-white">
           <dt className="text-sm text-white/75">Streak</dt>
           <dd className="stat mt-10 text-7xl text-volt">{streak ?? 0}<span className="ml-1 text-lg tracking-normal text-white/70">days</span></dd>
         </div>
