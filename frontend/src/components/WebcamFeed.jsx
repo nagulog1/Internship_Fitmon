@@ -7,6 +7,7 @@ import {
   initializePoseDetector,
 } from '../services/poseDetector';
 import socketService from '../services/socketService';
+import useAuthStore from '../store/useAuthStore';
 import useSessionStore from '../stores/useSessionStore';
 import { BicepCurlEngine } from '../utils/cvLogic';
 
@@ -27,6 +28,11 @@ export default function WebcamFeed() {
   const angle = useSessionStore((s) => s.angle);
   const repCount = useSessionStore((s) => s.repCount);
   const repState = useSessionStore((s) => s.repState);
+  const trackedArm = useAuthStore((s) => s.user?.preferences?.trackedArm) || 'auto';
+
+  useEffect(() => {
+    curlEngine.setTrackedArm(trackedArm);
+  }, [trackedArm]);
 
   useEffect(() => {
     curlEngine.reset();

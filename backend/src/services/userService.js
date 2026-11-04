@@ -11,7 +11,8 @@ async function ensureUserProfile(decodedToken) {
     role: 'trainee',
     goals: [],
     preferences: {
-      dominantArm: 'right',
+      // Which arm live sessions track. 'auto' follows whichever arm the camera sees best.
+      trackedArm: 'auto',
       units: 'metric',
     },
   };
@@ -26,7 +27,8 @@ async function ensureUserProfile(decodedToken) {
   } else {
     await userRef.set(
       {
-        name: decodedToken.name || snapshot.data().name || defaultProfile.name,
+        // A name saved in the profile editor wins over the Google account name.
+        name: snapshot.data().name || decodedToken.name || defaultProfile.name,
         email: decodedToken.email || snapshot.data().email || defaultProfile.email,
         photoURL: decodedToken.picture || snapshot.data().photoURL || '',
         updatedAt: admin.firestore.FieldValue.serverTimestamp(),
@@ -42,4 +44,19 @@ async function ensureUserProfile(decodedToken) {
   };
 }
 
-module.exports = { ensureUserProfile };
+// `updates` uses Firestore field paths, e.g. { name, goal, 'preferences.trackedArm': 'left' }.
+async function updateUserProfile(uid, updates) {
+  const userRef = getDb().collection('users').doc(uid);
+  await userRef.update({
+    ...updates,
+    updatedAt: admin.firestore.FieldValue.serverTimestamp(),
+  });
+
+  const refreshed = await userRef.get();
+  return {
+    uid,
+    ...refreshed.data(),
+  };
+}
+
+module.exports = { ensureUserProfile, updateUserProfile };
