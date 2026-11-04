@@ -153,6 +153,8 @@
 @utility body-6 { font-size: var(--text-sm); line-height: var(--text-sm--line-height); font-weight: var(--font-weight-normal); }
 /* Body 7: lead paragraphs such as the hero subheadline */
 @utility body-7 { font-size: var(--text-lg); line-height: var(--text-lg--line-height); font-weight: var(--font-weight-normal); }
+/* Body 8: the hero subheading on large screens */
+@utility body-8 { font-size: var(--text-xl); line-height: var(--text-xl--line-height); font-weight: var(--font-weight-normal); }
 @utility button-lg { font-size: var(--text-lg); line-height: var(--text-lg--line-height); font-weight: var(--font-weight-semibold); }
 @utility button-md { font-size: var(--text-base); line-height: var(--text-base--line-height); font-weight: var(--font-weight-semibold); }
 @utility button-sm { font-size: var(--text-sm); line-height: var(--text-sm--line-height); font-weight: var(--font-weight-semibold); }
@@ -162,6 +164,14 @@
 @utility caption-3 { font-size: var(--text-xs); line-height: var(--text-xs--line-height); font-weight: var(--font-weight-semibold); }
 @utility caption-4 { font-size: var(--text-xs); line-height: var(--text-xs--line-height); font-weight: var(--font-weight-medium); }
 @utility caption-5 { font-size: var(--text-xs); line-height: var(--text-xs--line-height); font-weight: var(--font-weight-normal); }
+
+/* The dark theme hero gradient, fixed, for headings set over a photo in either theme */
+@utility text-gradient-photo {
+  background-image: linear-gradient(90deg, #ffffff, #9b9b9b);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
 
 @utility text-gradient-hero {
   background-image: linear-gradient(90deg, var(--hero-from), var(--hero-to));

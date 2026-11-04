@@ -126,45 +126,45 @@ export default function LandingPage() {
 
       <main id="main">
         {/* ── HERO ── */}
-        <section className="mx-auto grid max-w-[1320px] items-center gap-12 px-4 pt-24 pb-16 sm:px-8 lg:grid-cols-2 lg:gap-16 lg:pt-40 lg:pb-24">
-          <div className="min-w-0 animate-rise">
-            <p className="caption-1 inline-flex items-center gap-2 text-ink-2">
-              <span className="size-2 rounded-full bg-volt" aria-hidden />
-              Every rep, on the record
-            </p>
-            <h1 className="heading-3 sm:heading-2 lg:heading-1 mt-4 max-w-[680px] text-gradient-hero">
-              <span className="block">Fix your curl form</span>
-              <span className="block">with just a webcam</span>
-            </h1>
-            <p className="body-7 mt-6 max-w-[680px] text-ink-2">
-              FitMon watches your bicep curls through the camera you already have. It scores every rep out of 100 and cues
-              you the moment your elbow drifts or you rush the way down.
-            </p>
-            <div className="mt-8">
-              <Link to={primaryHref} className="button button-primary button-lg">
-                {primaryLabel}
-                <ArrowRightIcon className="size-5" weight="bold" aria-hidden />
-              </Link>
-            </div>
-            <ul className="mt-8 flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:gap-6">
-              <li className="caption-2 flex items-center gap-2 text-ink-2">
-                <LockSimpleIcon className="size-4 shrink-0 text-ink" weight="bold" aria-hidden />
-                Your video never leaves your computer
-              </li>
-              <li className="caption-2 flex items-center gap-2 text-ink-2">
-                <WebcamIcon className="size-4 shrink-0 text-ink" weight="bold" aria-hidden />
-                Any webcam, nothing to install
-              </li>
-            </ul>
-          </div>
+        {/* Full bleed photo with the copy over it: at the bottom on small screens, over the dark shirt on the right on desktop. */}
+        <section className="relative isolate flex min-h-svh items-end overflow-hidden bg-[#000000] text-white lg:items-center">
+          <img
+            src="/landing/hero/arm-dumbbell.jpg"
+            alt="An athlete curling a dumbbell, photographed side on"
+            fetchPriority="high"
+            className="absolute inset-0 -z-20 size-full object-cover object-[30%_50%] lg:object-center"
+          />
+          {/* A flat tint, never a gradient. Stronger on small screens, where the copy sits over the busiest part of the photo. */}
+          <div className="absolute inset-0 -z-10 bg-[#000000]/45 lg:bg-[#000000]/20" aria-hidden />
 
-          <div className="animate-rise [animation-delay:120ms]">
-            <img
-              src="/landing/hero/arm-dumbbell.jpg"
-              alt="An athlete curling a dumbbell, photographed side on"
-              fetchPriority="high"
-              className="aspect-[4/5] w-full rounded-3xl object-cover object-[10%_50%] lg:aspect-[5/6]"
-            />
+          <div className="mx-auto flex w-full max-w-[1320px] px-4 pt-24 pb-16 sm:px-8 lg:justify-end lg:py-24">
+            <div className="min-w-0 animate-rise lg:max-w-[560px]">
+              <p className="body-2 text-white/80">Every rep, on the record</p>
+              <h1 className="heading-3 sm:heading-2 lg:heading-1 mt-4 max-w-[680px] text-gradient-photo">
+                <span className="block">Fix your curl form</span>
+                <span className="block">with just a webcam</span>
+              </h1>
+              <p className="body-7 lg:body-8 mt-6 max-w-[680px] text-white/85">
+                FitMon watches your bicep curls through the camera you already have. It scores every rep out of 100 and cues
+                you the moment your elbow drifts or you rush the way down.
+              </p>
+              <div className="mt-8">
+                <Link to={primaryHref} className="button button-primary button-lg focus-visible:outline-white">
+                  {primaryLabel}
+                  <ArrowRightIcon className="size-5" weight="bold" aria-hidden />
+                </Link>
+              </div>
+              <ul className="mt-8 flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:gap-6">
+                <li className="body-3 flex items-center gap-2 text-white/80">
+                  <LockSimpleIcon className="size-5 shrink-0 text-white" weight="bold" aria-hidden />
+                  Your video never leaves your computer
+                </li>
+                <li className="body-3 flex items-center gap-2 text-white/80">
+                  <WebcamIcon className="size-5 shrink-0 text-white" weight="bold" aria-hidden />
+                  Any webcam, nothing to install
+                </li>
+              </ul>
+            </div>
           </div>
         </section>
 
