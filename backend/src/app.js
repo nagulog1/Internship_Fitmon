@@ -4,6 +4,7 @@ const express = require('express');
 const { verifyToken } = require('./auth/verifyToken');
 const { createAuthenticatedSession } = require('./controllers/authController');
 const { submitContact } = require('./controllers/contactController');
+const { updateProfile } = require('./controllers/profileController');
 const { receiveSensorReading } = require('./controllers/iotController');
 const { clientOrigins } = require('./utils/env');
 
@@ -28,6 +29,7 @@ function createApp() {
 
   app.post('/api/auth/session', verifyToken, createAuthenticatedSession);
   app.get('/api/auth/me', verifyToken, createAuthenticatedSession);
+  app.patch('/api/profile', verifyToken, updateProfile);
   app.post('/api/iot/reading', receiveSensorReading);
   app.post('/api/contact', submitContact);
 

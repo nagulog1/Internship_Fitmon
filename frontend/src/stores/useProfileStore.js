@@ -1,5 +1,5 @@
 import { create } from 'zustand';
-import { getFirestore, doc, getDoc, updateDoc, collection, query, where, getDocs, setDoc } from 'firebase/firestore';
+import { getFirestore, doc, getDoc, collection, query, where, getDocs } from 'firebase/firestore';
 import { firebaseApp } from '../firebase/config';
 
 const db = firebaseApp ? getFirestore(firebaseApp) : null;
@@ -58,8 +58,8 @@ const computeStreak = (sessions) => {
   return streakCount;
 };
 
+// Session metrics for the profile page. Editable profile fields live on the auth user and save through the backend.
 const useProfileStore = create((set) => ({
-  goal: '',
   streak: 0,
   totalSessions: 0,
   accuracyRate: 0,
@@ -79,12 +79,10 @@ const useProfileStore = create((set) => ({
         userSnap = await getDoc(userRef);
       }
       let streak = 0;
-      let goal = 'Improve form and prevent injury';
 
       if (userSnap && userSnap.exists()) {
         const data = userSnap.data();
         streak = data.streak || 0;
-        goal = data.goal || goal;
       }
 
       const sessionsRef = collection(db, 'sessions');
@@ -123,7 +121,6 @@ const useProfileStore = create((set) => ({
 
       set({ 
         streak, 
-        goal, 
         totalSessions, 
         accuracyRate, 
         recentSessions,
@@ -131,25 +128,6 @@ const useProfileStore = create((set) => ({
       });
     } catch (e) {
       set({ error: e.message, isLoading: false });
-    }
-  },
-
-  updateGoal: async (uid, newGoal) => {
-    if (!db || !uid) return;
-    try {
-      const userRef = doc(db, 'users', uid);
-      try {
-        await updateDoc(userRef, { goal: newGoal });
-      } catch (err) {
-        if (err.code === 'not-found') {
-          await setDoc(userRef, { goal: newGoal }, { merge: true });
-        } else {
-          throw err;
-        }
-      }
-      set({ goal: newGoal });
-    } catch (e) {
-      set({ error: e.message });
     }
   }
 }));

@@ -3,13 +3,36 @@
   <head>
     <meta charset="UTF-8" />
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
     <meta name="theme-color" content="#eceeed" />
-    <meta name="description" content="FitMon — AI-powered real-time fitness monitoring platform. Track bicep curls with computer vision, sensor fusion, and AI coaching." />
+    <title>FitMon · Check your bicep curl form with any webcam</title>
+    <meta name="description" content="FitMon watches your bicep curls through your webcam, scores every rep out of 100 and cues you when your elbow drifts or you rush the lowering. Runs in your browser; your video never leaves your computer." />
+    <meta property="og:type" content="website" />
+    <meta property="og:site_name" content="FitMon" />
+    <meta property="og:title" content="FitMon · Check your bicep curl form with any webcam" />
+    <meta property="og:description" content="Every curl scored out of 100, with live cues when your elbow drifts or you rush the lowering. Runs in your browser." />
+    <meta property="og:image" content="/apple-touch-icon.png" />
+    <meta name="twitter:card" content="summary" />
+    <meta name="twitter:title" content="FitMon · Check your bicep curl form with any webcam" />
+    <meta name="twitter:description" content="Every curl scored out of 100, with live cues when your elbow drifts or you rush the lowering." />
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-    <link href="https://fonts.googleapis.com/css2?family=Inter+Tight:wght@300..700&display=swap" rel="stylesheet" />
-    <title>FitMon — AI Fitness Intelligence</title>
+    <link href="https://fonts.googleapis.com/css2?family=Geist:wght@300..700&family=Geist+Mono:wght@400..600&display=swap" rel="stylesheet" />
+    <script>
+      // Runs before first paint so a saved dark theme never flashes light.
+      (function () {
+        var theme = null;
+        try {
+          theme = localStorage.getItem('fitmon-theme');
+        } catch (e) {}
+        if (theme !== 'light' && theme !== 'dark') {
+          theme = window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+        }
+        document.documentElement.dataset.theme = theme;
+        document.querySelector('meta[name="theme-color"]').setAttribute('content', theme === 'dark' ? '#000000' : '#eceeed');
+      })();
+    </script>
   </head>
   <body>
     <div id="root"></div>

@@ -41,6 +41,38 @@ export const getReportPdfFileName = (report) => {
   return `fitmon-report-${id}.pdf`;
 };
 
+// The ring version of the logo for dark backgrounds, drawn from the same 64-unit grid as LogoRing in ui.jsx.
+const drawLogoMark = (pdf, x, y, size) => {
+  const u = size / 64;
+  const px = (value) => x + value * u;
+  const py = (value) => y + value * u;
+  const ink = [14, 16, 19];
+  const volt = [222, 245, 43];
+
+  pdf.setDrawColor(110, 112, 115);
+  pdf.setLineWidth(1.2 * u);
+  pdf.circle(px(32), py(32), 30.5 * u, 'S');
+
+  pdf.setFillColor(110, 112, 115);
+  [-85, -68, -51, -34, -17, 0].forEach((degrees) => {
+    const radians = (degrees * Math.PI) / 180;
+    pdf.circle(px(27.1 + 24.5 * Math.cos(radians)), py(46.8 + 24.5 * Math.sin(radians)), 1 * u, 'F');
+  });
+
+  pdf.setDrawColor(255, 255, 255);
+  pdf.setLineWidth(2.8 * u);
+  pdf.line(px(23), py(15), px(27.1), py(46.8));
+  pdf.line(px(27.1), py(46.8), px(44.3), py(29.4));
+
+  pdf.setFillColor(...ink);
+  pdf.setLineWidth(2.2 * u);
+  pdf.circle(px(23), py(14.6), 3.9 * u, 'FD');
+  pdf.setDrawColor(...volt);
+  pdf.circle(px(44.3), py(29.4), 3.9 * u, 'FD');
+  pdf.setFillColor(...volt);
+  pdf.circle(px(27.1), py(46.8), 5.4 * u, 'F');
+};
+
 export const buildReportPdf = (report) => {
   if (!report) return null;
 
@@ -95,14 +127,15 @@ export const buildReportPdf = (report) => {
 
   const startedAtTs = getTimestamp(report.startedAt) || Date.now();
 
-  pdf.setFillColor(255, 123, 84);
+  pdf.setFillColor(14, 16, 19);
   pdf.roundedRect(margin, y, pageWidth - margin * 2, 26, 4, 4, 'F');
+  drawLogoMark(pdf, margin + 4, y + 4, 18);
   pdf.setTextColor(255, 255, 255);
   pdf.setFont('helvetica', 'bold');
   pdf.setFontSize(20);
-  pdf.text('FitMon Session Report', margin + 6, y + 11);
+  pdf.text('FitMon Session Report', margin + 26, y + 11);
   pdf.setFontSize(10);
-  pdf.text(`Generated: ${new Date(startedAtTs).toLocaleString()}`, margin + 6, y + 19);
+  pdf.text(`Generated: ${new Date(startedAtTs).toLocaleString()}`, margin + 26, y + 19);
   y += 36;
 
   addSectionTitle('Overview');

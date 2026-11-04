@@ -12,7 +12,11 @@ export async function authorizedRequest(path, token, options = {}) {
 
   if (!response.ok) {
     const errorBody = await response.json().catch(() => ({}));
-    throw new Error(errorBody.details || errorBody.message || 'Request failed');
+    const error = new Error(errorBody.details || errorBody.message || 'Request failed');
+    error.status = response.status;
+    // Per field messages from validation, e.g. { name: 'Add a name.' }
+    error.fields = errorBody.errors || null;
+    throw error;
   }
 
   return response.json();

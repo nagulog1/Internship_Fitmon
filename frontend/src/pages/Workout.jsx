@@ -63,7 +63,7 @@ export default function Workout() {
         <ul className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
           {filtered.map((workout) => (
             <li key={workout.id} className="group card overflow-hidden">
-              <div className="relative isolate aspect-[4/3] bg-ink">
+              <div className="relative isolate aspect-[4/3] bg-panel">
                 {playing === workout.id ? (
                   <iframe
                     src={`https://www.youtube-nocookie.com/embed/${workout.ytId}?rel=0&autoplay=1`}
@@ -91,7 +91,13 @@ export default function Workout() {
                 )}
               </div>
               <div className="flex items-center justify-between gap-3 px-5 py-4">
-                <span className="text-sm text-ink-2">{workout.muscle}</span>
+                {playing === workout.id ? (
+                  <a href={`https://www.youtube.com/watch?v=${workout.ytId}`} target="_blank" rel="noreferrer" className="text-sm text-ink-2 underline underline-offset-2 hover:text-ink">
+                    Watch on YouTube
+                  </a>
+                ) : (
+                  <span className="text-sm text-ink-2">{workout.muscle}</span>
+                )}
                 <span className={cx('tag', difficultyTag[workout.difficulty])}>{workout.difficulty}</span>
               </div>
             </li>

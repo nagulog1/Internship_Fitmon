@@ -1,10 +1,17 @@
 import { useEffect, useState } from 'react';
 import { signInWithPopup } from 'firebase/auth';
-import { ArrowLeft } from 'lucide-react';
+import { ArrowLeft, Check } from 'lucide-react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { auth, googleProvider, hasFirebaseConfig } from '../firebase/config';
 import useAuthStore from '../store/useAuthStore';
-import { Logo, Notice } from '../components/ui';
+import { CurlDiagram, Logo, Notice, ThemeToggle } from '../components/ui';
+
+const BENEFITS = [
+  'Your reps counted and scored as you lift',
+  'Cues the moment your form slips',
+  'A report and PDF after every set',
+  'Your webcam video stays on your computer',
+];
 
 export default function Login() {
   const navigate = useNavigate();
@@ -39,22 +46,19 @@ export default function Login() {
 
   return (
     <div className="grid min-h-screen bg-canvas p-3 lg:grid-cols-[1.25fr_1fr]">
-      <aside className="relative isolate hidden overflow-hidden rounded-[4px] bg-ink text-white lg:flex lg:flex-col lg:justify-between lg:p-10">
-        <img src="/landing/hero.jpg" alt="" className="absolute inset-0 -z-20 size-full object-cover object-[60%_35%]" />
-        <div className="photo-scrim absolute inset-0 -z-10" aria-hidden />
+      <aside className="relative isolate hidden overflow-hidden rounded-[4px] bg-panel text-white lg:flex lg:flex-col lg:justify-between lg:p-10">
         <div className="flex items-center justify-between">
           <Logo inverted />
           <p className="text-sm text-white/80">Built for the gym floor</p>
         </div>
+        <CurlDiagram inverted className="mx-auto my-8 w-full max-w-[420px]" />
         <div>
-          <p className="headline text-[88px] xl:text-[112px]">
+          <p className="headline text-[64px] xl:text-[80px]">
             Every rep
             <br />
-            on the
-            <br />
-            rec<span className="text-volt">/</span>ord
+            on the rec<span className="text-volt">/</span>ord
           </p>
-          <p className="lede mt-8 max-w-md text-2xl text-white/90">Scores your posture on every rep, and tells you what to fix.</p>
+          <p className="lede mt-6 max-w-md text-2xl text-white/90">Scores your posture on every rep, and tells you what to fix.</p>
         </div>
       </aside>
 
@@ -63,9 +67,12 @@ export default function Login() {
           <div className="lg:hidden">
             <Logo />
           </div>
-          <Link to="/" className="link ml-auto">
-            <ArrowLeft className="size-3.5" /> Back to site
-          </Link>
+          <div className="ml-auto flex items-center gap-4">
+            <Link to="/" className="link">
+              <ArrowLeft className="size-3.5" /> Back to site
+            </Link>
+            <ThemeToggle />
+          </div>
         </div>
 
         <div className="flex flex-1 items-center py-16">
@@ -87,7 +94,16 @@ export default function Login() {
               </div>
             ) : null}
 
-            <p className="mt-12 border-t border-line pt-5 text-xs leading-relaxed text-muted">
+            <ul className="mt-10 grid gap-3 text-sm text-ink-2">
+              {BENEFITS.map((benefit) => (
+                <li key={benefit} className="flex items-start gap-3">
+                  <Check className="mt-0.5 size-4 shrink-0 text-ink" aria-hidden />
+                  {benefit}
+                </li>
+              ))}
+            </ul>
+
+            <p className="mt-10 border-t border-line pt-5 text-xs leading-relaxed text-muted">
               FitMon gives training guidance. It isn't a medical device. If something hurts, stop and see a professional.
             </p>
           </div>

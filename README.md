@@ -4,6 +4,48 @@ FitMon checks your bicep curl form through a webcam. It counts your reps, scores
 
 You can also wear an optional wrist band with a force sensor (FSR). If it's connected, FitMon adds grip pressure to the score so it can tell a heavy rep apart from a sloppy one.
 
+## Screenshots
+
+### Homepage
+
+![FitMon homepage: a full-width photo of an athlete curling a dumbbell, with the headline "Fix your curl form with just a webcam" and a "Start your first set" button](docs/screenshots/01-home-hero.jpg)
+
+The first screen is a full-width photo with the pitch on top and a single button, **Start your first set**, which takes you to Google sign-in. The two lines under the button answer the usual first worries: your video stays on your computer, and there's nothing to install.
+
+<img src="docs/screenshots/02-home-hero-phone.jpg" alt="The same homepage on a phone, with the text at the bottom of the photo" width="300">
+
+On a phone the text moves to the bottom of the photo and the tint gets darker so it stays readable. The headline, the button and both reassurances all fit on the first screen.
+
+### Form in motion
+
+![A 3D figure curling a dumbbell, with the shoulder, elbow and wrist marked and readouts for shoulder drift, elbow angle and range](docs/screenshots/03-form-in-motion.jpg)
+
+The 3D model shows what FitMon measures from the side: the elbow angle, how far the shoulder drifts, and the range of the curl. The tracked shoulder, elbow and wrist are marked in volt, the same three points the camera follows in a real session. It loops through a full curl, and you can drag it to turn it around. This shot is in dark mode; every page has a light and a dark theme, switched from the button in the navigation.
+
+### What it checks
+
+![Five cards: every rep scored, no more half reps, elbow stays pinned, control on the way down, and one injury risk number](docs/screenshots/04-what-it-checks.jpg)
+
+The checks FitMon runs on every rep: posture, range of motion, elbow drift and tempo. They roll up into one injury risk score on a Safe, Watch, High scale.
+
+### The rep log
+
+![A sample readout of four reps with range, form score and grip pressure, where reps 11 and 12 are flagged](docs/screenshots/05-rep-log.jpg)
+
+A sample of the per-rep readout. Form drops from 88 to 47 over the last four reps of a tiring set, and the reps where the elbow moved forward or grip pressure spiked are flagged. Your own reports break every set down rep by rep in the same way.
+
+### FAQ
+
+![The FAQ section in dark mode, with eight questions such as "Does my video get uploaded anywhere?"](docs/screenshots/06-faq.jpg)
+
+Answers to the questions people ask before trying it, such as where the video goes, what you need to start and whether you need the band.
+
+### Sign in
+
+![The sign-in page, with an animated curl diagram on the left and a "Continue with Google" button on the right](docs/screenshots/07-sign-in.jpg)
+
+Sign-in uses your Google account. The first sign-in creates your FitMon account; after that you land on your dashboard.
+
 ## How it works
 
 1. The browser runs MediaPipe pose detection on your webcam feed. The video itself never leaves your computer.
@@ -132,7 +174,7 @@ Your computer and the board need to be on the same Wi-Fi network.
 3. Stand side-on to the camera with your working arm fully in frame.
 4. Press Start session and do your set. Cues show up on the right if your form slips.
 5. Press End session. The report opens on its own, and you can download it as a PDF.
-6. History lists all your past sessions, and Profile shows your goal, streak and accuracy.
+6. History lists all your past sessions, and Profile shows your streak and accuracy. Use **Edit profile** there to change your name, your training goal and which arm live sessions track.
 
 Only one app can use the webcam at a time, so close video calls and other camera apps first.
 
@@ -145,6 +187,7 @@ HTTP:
 | GET | `/api/health` | Health check |
 | POST | `/api/auth/session` | Exchanges a Firebase ID token for the app user (needs `Authorization: Bearer <token>`) |
 | GET | `/api/auth/me` | Same, for an existing login |
+| PATCH | `/api/profile` | Updates `name`, `goal` and `trackedArm` (`auto`, `left` or `right`) for the signed-in user |
 | POST | `/api/iot/reading` | Band reading, body `{ "value": 512 }`, header `x-api-key` |
 | POST | `/api/contact` | Contact form on the landing page |
 

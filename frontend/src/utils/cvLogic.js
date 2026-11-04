@@ -20,7 +20,9 @@ export function calculateAngle(a, b, c) {
   return angle;
 }
 
-export function extractArmJoints(landmarks) {
+// `preferredSide` is 'left', 'right' or 'auto'. Auto picks whichever arm the camera sees best.
+// MediaPipe labels sides from the person's point of view, so 'left' is their actual left arm.
+export function extractArmJoints(landmarks, preferredSide = 'auto') {
   if (!landmarks || landmarks.length < 17) return null;
 
   const leftArm = {
@@ -38,20 +40,29 @@ export function extractArmJoints(landmarks) {
   const leftVis = (leftArm.shoulder.visibility + leftArm.elbow.visibility + leftArm.wrist.visibility) / 3;
   const rightVis = (rightArm.shoulder.visibility + rightArm.elbow.visibility + rightArm.wrist.visibility) / 3;
 
-  return leftVis > rightVis
-    ? { ...leftArm, side: 'left', visibility: leftVis }
-    : { ...rightArm, side: 'right', visibility: rightVis };
+  const left = { ...leftArm, side: 'left', visibility: leftVis };
+  const right = { ...rightArm, side: 'right', visibility: rightVis };
+  if (preferredSide === 'left') return left;
+  if (preferredSide === 'right') return right;
+  return leftVis > rightVis ? left : right;
 }
 
 export class BicepCurlEngine {
   constructor() {
+    // Set from the profile; kept across reset() so it survives between sets.
+    this.trackedArm = 'auto';
     this.reset();
   }
 
+  setTrackedArm(side) {
+    this.trackedArm = side === 'left' || side === 'right' ? side : 'auto';
+  }
+
   processFrame(landmarks, timestamp) {
-    const joints = extractArmJoints(landmarks);
+    const joints = extractArmJoints(landmarks, this.trackedArm);
     if (!joints || joints.visibility < 0.5) {
-      return { valid: false, message: 'Arm not visible' };
+      const message = this.trackedArm === 'auto' ? 'Arm not visible' : `Your ${this.trackedArm} arm is not visible`;
+      return { valid: false, message };
     }
 
     const angle = calculateAngle(joints.shoulder, joints.elbow, joints.wrist);

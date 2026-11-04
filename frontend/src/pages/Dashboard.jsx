@@ -51,8 +51,8 @@ export default function Dashboard() {
   return (
     <div className="animate-rise">
       {/* Photo banner */}
-      <section className="relative isolate overflow-hidden rounded-[4px] bg-ink text-white">
-        <img src="/landing/hero.jpg" alt="" className="absolute inset-0 -z-20 size-full object-cover object-[60%_38%]" />
+      <section className="relative isolate overflow-hidden rounded-[4px] bg-panel text-white">
+        <img src="/landing/hero/arm-dumbbell.jpg" alt="" className="absolute inset-0 -z-20 size-full object-cover object-[50%_50%]" />
         <div className="photo-scrim absolute inset-0 -z-10" aria-hidden />
         <div className="grid min-h-[420px] gap-8 p-6 sm:p-10 lg:grid-cols-[1fr_260px]">
           <div className="flex flex-col justify-between gap-10">

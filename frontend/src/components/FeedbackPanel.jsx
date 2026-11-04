@@ -174,7 +174,7 @@ export default function FeedbackPanel() {
         </div>
         <div className="relative mt-5 h-1 rounded-full bg-ink/10">
           <span
-            className="absolute top-1/2 size-3.5 -translate-x-1/2 -translate-y-1/2 rounded-full border-2 border-white bg-ink shadow transition-[left] duration-150"
+            className="absolute top-1/2 size-3.5 -translate-x-1/2 -translate-y-1/2 rounded-full border-2 border-surface bg-ink shadow transition-[left] duration-150"
             style={{ left: `${anglePct}%` }}
           />
         </div>
